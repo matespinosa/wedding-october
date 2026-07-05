@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowUpRight, CalendarPlus, Church, Clock, MapPin, Wine } from "lucide-react";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { FloralBranch, RingsOrnament } from "@/components/ui/Florals";
@@ -17,6 +18,8 @@ type Venue = {
   address: string;
   city: string;
   time: string;
+  image: string;
+  imageAlt: string;
   mapsUrl: string;
   calendar: CalendarEvent;
 };
@@ -40,24 +43,38 @@ function VenueCard({
         y: -7,
         transition: { type: "spring", stiffness: 280, damping: 22 },
       }}
-      className="group relative overflow-hidden rounded-[28px] border border-ink/[0.07] bg-white/70 p-8 shadow-[0_30px_90px_-55px_rgba(27,27,27,0.5)] backdrop-blur-sm transition-shadow duration-700 hover:shadow-[0_44px_110px_-48px_rgba(169,138,88,0.5)] md:p-10"
+      className="group relative flex flex-col overflow-hidden rounded-[28px] border border-ink/[0.07] bg-white/70 shadow-[0_30px_90px_-55px_rgba(27,27,27,0.5)] backdrop-blur-sm transition-shadow duration-700 hover:shadow-[0_44px_110px_-48px_rgba(169,138,88,0.5)]"
     >
-      <FloralBranch className="pointer-events-none absolute -right-6 -top-8 h-36 rotate-[155deg] text-gold/[0.14] transition-transform duration-1000 ease-out-expo group-hover:rotate-[147deg] group-hover:scale-110" />
-
-      <div className="flex items-center justify-between">
-        <span className="grid size-12 place-items-center rounded-full border border-gold/40 text-gold-deep transition-colors duration-500 group-hover:border-gold group-hover:bg-gold/10">
-          {icon}
-        </span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.32em] text-bronze">
+      {/* Foto real del lugar */}
+      <div className="relative h-52 w-full overflow-hidden md:h-60">
+        <Image
+          src={venue.image}
+          alt={venue.imageAlt}
+          fill
+          sizes="(max-width: 768px) 100vw, 45vw"
+          className="object-cover transition-transform duration-[1600ms] ease-out-expo group-hover:scale-[1.06]"
+        />
+        <span
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-ink/45 via-ink/5 to-transparent"
+        />
+        <span className="absolute bottom-4 left-5 text-[10px] font-medium uppercase tracking-[0.32em] text-cream/90">
           {venue.kind}
         </span>
       </div>
 
-      <h3 className="mt-8 font-serif text-3xl font-light leading-tight text-ink">
-        {venue.name}
-      </h3>
+      <div className="relative p-8 md:p-10">
+        <FloralBranch className="pointer-events-none absolute -right-6 top-2 h-32 rotate-[155deg] text-gold/[0.14] transition-transform duration-1000 ease-out-expo group-hover:rotate-[147deg] group-hover:scale-110" />
 
-      <div className="mt-5 space-y-2.5 text-[14px] leading-relaxed text-ink/60">
+        <span className="grid size-12 place-items-center rounded-full border border-gold/40 text-gold-deep transition-colors duration-500 group-hover:border-gold group-hover:bg-gold/10">
+          {icon}
+        </span>
+
+        <h3 className="mt-6 font-serif text-[1.7rem] font-light leading-tight text-ink">
+          {venue.name}
+        </h3>
+
+        <div className="mt-5 space-y-2.5 text-[14px] leading-relaxed text-ink/60">
         <p className="flex items-center gap-2.5">
           <MapPin size={15} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
           {venue.address} · {venue.city}
@@ -90,6 +107,7 @@ function VenueCard({
         >
           Agendar
         </Button>
+        </div>
       </div>
     </motion.article>
   );

@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Instagram } from "lucide-react";
+import Image from "next/image";
 import { FloralBranch, RoseBloom } from "@/components/ui/Florals";
-import { Magnetic } from "@/components/ui/Magnetic";
 import { Reveal } from "@/components/ui/Reveal";
 import { TextReveal } from "@/components/ui/TextReveal";
 import { site } from "@/lib/content";
@@ -28,6 +27,20 @@ export function Closing() {
       id="gracias"
       className="relative overflow-hidden bg-ink py-32 text-cream md:py-44"
     >
+      {/* Foto real de fondo con velo oscuro */}
+      <div aria-hidden className="absolute inset-0">
+        <Image
+          src={site.closing.image}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-center opacity-40"
+        />
+      </div>
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-b from-ink/85 via-ink/70 to-ink/90"
+      />
       {/* Viñeta y botánica ambiental */}
       <div
         aria-hidden
@@ -97,25 +110,11 @@ export function Closing() {
           className="mt-12 h-px w-24 bg-gold/50"
         />
 
-        <div className="mt-10 flex flex-col items-center gap-6">
-          <Magnetic strength={0.35}>
-            <a
-              href={site.closing.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Síguenos en Instagram"
-              className="grid size-12 place-items-center rounded-full border border-cream/20 text-cream/70 transition-colors duration-500 hover:border-gold hover:text-gold"
-            >
-              <Instagram size={17} strokeWidth={1.5} />
-            </a>
-          </Magnetic>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-gold/70">
-            {site.couple.hashtag}
+        <Reveal delay={0.55} y={16}>
+          <p className="mt-10 text-[11px] uppercase tracking-[0.3em] text-gold/70">
+            {site.closing.tagline}
           </p>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-cream/35">
-            {site.date.short} · {site.date.city}
-          </p>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -2,6 +2,42 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+export type TimeLeft = {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  passed: boolean;
+};
+
+function diff(target: number): TimeLeft {
+  const ms = target - Date.now();
+  if (ms <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, passed: true };
+  const s = Math.floor(ms / 1000);
+  return {
+    days: Math.floor(s / 86400),
+    hours: Math.floor((s % 86400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+    seconds: s % 60,
+    passed: false,
+  };
+}
+
+/** Live countdown to a target date. Starts null on the server to avoid a
+ *  hydration mismatch, then ticks every second on the client. */
+export function useCountdown(target: Date): TimeLeft | null {
+  const time = target.getTime();
+  const [left, setLeft] = useState<TimeLeft | null>(null);
+
+  useEffect(() => {
+    setLeft(diff(time));
+    const id = window.setInterval(() => setLeft(diff(time)), 1000);
+    return () => window.clearInterval(id);
+  }, [time]);
+
+  return left;
+}
+
 /** Tracks which section id is currently in the middle band of the viewport. */
 export function useActiveSection(ids: string[]) {
   const [active, setActive] = useState<string | null>(null);

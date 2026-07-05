@@ -1,6 +1,8 @@
 import { Closing } from "@/components/sections/Closing";
+import { Countdown } from "@/components/sections/Countdown";
 import { DressCode } from "@/components/sections/DressCode";
 import { Footer } from "@/components/sections/Footer";
+import { Gallery } from "@/components/sections/Gallery";
 import { Hero } from "@/components/sections/Hero";
 import { Rsvp } from "@/components/sections/Rsvp";
 import { Story } from "@/components/sections/Story";
@@ -11,10 +13,13 @@ export default function Home() {
   return (
     <main>
       <Hero />
+      <Countdown />
       <Story />
-      <SectionDivider bg="bg-cream" fill="text-shell" />
+      <SectionDivider bg="bg-cream" fill="text-ink" />
+      <Gallery />
+      <SectionDivider bg="bg-ink" fill="text-shell" />
       <Venues />
-      <SectionDivider bg="bg-shell" fill="text-ink" flip={false} />
+      <SectionDivider bg="bg-shell" fill="text-ink" />
       <DressCode />
       <SectionDivider bg="bg-ink" fill="text-cream" />
       <Rsvp />

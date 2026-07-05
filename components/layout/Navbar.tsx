@@ -220,9 +220,6 @@ export function Navbar() {
               <p className="text-[10px] uppercase tracking-[0.25em] text-ink/40">
                 {site.date.short} · {site.date.city}
               </p>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-bronze">
-                {site.couple.hashtag}
-              </p>
             </motion.div>
           </motion.div>
         )}

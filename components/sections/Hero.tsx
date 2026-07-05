@@ -8,6 +8,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { ArrowDown } from "lucide-react";
+import Image from "next/image";
 import { useRef } from "react";
 import { useLenis } from "@/components/providers/LenisProvider";
 import { useSiteReady } from "@/components/providers/load-context";
@@ -42,6 +43,7 @@ export function Hero() {
   });
   const yContent = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const yFlorals = useTransform(scrollYProgress, [0, 1], [0, 260]);
+  const yPhoto = useTransform(scrollYProgress, [0, 1], [0, 120]);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   /* Parallax de mouse en las flores, con muelle perezoso. */
@@ -68,6 +70,27 @@ export function Hero() {
       onMouseMove={onMouseMove}
       className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-cream"
     >
+      {/* Foto real de fondo, velada con un tono cálido para conservar el aire claro */}
+      <motion.div aria-hidden style={{ y: yPhoto }} className="absolute inset-0 -top-[10%] h-[120%]">
+        <Image
+          src="/images/hero.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[56%_38%] opacity-45"
+        />
+      </motion.div>
+      {/* Velo crema: mantiene legible el título y el tono editorial */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-cream/45"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[radial-gradient(58%_50%_at_50%_46%,rgba(247,243,238,0.92),rgba(247,243,238,0.55)_60%,rgba(247,243,238,0.25))]"
+      />
+
       {/* Ambiente: manchas de luz en deriva lenta */}
       <div aria-hidden className="absolute inset-0">
         <div className="animate-drift absolute -left-40 -top-48 size-[42rem] rounded-full bg-gold/[0.12] blur-3xl" />
