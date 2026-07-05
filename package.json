@@ -2,9 +2,13 @@
   "name": "mateo-julieth-wedding",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "description": "Invitación digital de boda — Mateo & Julieth",
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "rm -rf .next && next dev",
     "build": "next build",
     "start": "next start"
   },

@@ -42,8 +42,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={`${cormorant.variable} ${inter.variable}`}>
-      <body>
+    <html
+      lang="es"
+      suppressHydrationWarning
+      className={`${cormorant.variable} ${inter.variable}`}
+    >
+      <body suppressHydrationWarning>
         <AppShell>{children}</AppShell>
       </body>
     </html>
