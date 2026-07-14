@@ -61,7 +61,7 @@ export const site = {
     moments: [
       {
         title: "El encuentro",
-        text: "Hace casi cuatro años y medio, Dios cruzó nuestros caminos. Lo que parecía casualidad era el comienzo de todo.",
+        text: "Hace cuatro años y medio, Dios cruzó nuestros caminos. Lo que parecía casualidad era el comienzo de todo.",
         word: "Encuentro",
       },
       {
