@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import { ArrowUpRight, CalendarPlus, Church, Clock, MapPin, Wine } from "lucide-react";
-import Image from "next/image";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { FloralBranch, RingsOrnament } from "@/components/ui/Florals";
+import { ParallaxImage } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { site } from "@/lib/content";
@@ -46,14 +46,14 @@ function VenueCard({
       className="group relative flex flex-col overflow-hidden rounded-[28px] border border-ink/[0.07] bg-white/70 shadow-[0_30px_90px_-55px_rgba(27,27,27,0.5)] backdrop-blur-sm transition-shadow duration-700 hover:shadow-[0_44px_110px_-48px_rgba(169,138,88,0.5)]"
     >
       {/* Foto real del lugar */}
-      <div className="relative h-52 w-full overflow-hidden md:h-60">
-        <Image
-          src={venue.image}
-          alt={venue.imageAlt}
-          fill
-          sizes="(max-width: 768px) 100vw, 45vw"
-          className="object-cover transition-transform duration-[1600ms] ease-out-expo group-hover:scale-[1.06]"
-        />
+      <ParallaxImage
+        src={venue.image}
+        alt={venue.imageAlt}
+        sizes="(max-width: 768px) 100vw, 45vw"
+        amount={34}
+        className="h-52 w-full md:h-60"
+        imgClassName="transition-transform duration-[1600ms] ease-out-expo group-hover:scale-[1.06]"
+      >
         <span
           aria-hidden
           className="absolute inset-0 bg-gradient-to-t from-ink/45 via-ink/5 to-transparent"
@@ -61,7 +61,7 @@ function VenueCard({
         <span className="absolute bottom-4 left-5 text-[10px] font-medium uppercase tracking-[0.32em] text-cream/90">
           {venue.kind}
         </span>
-      </div>
+      </ParallaxImage>
 
       <div className="relative p-8 md:p-10">
         <FloralBranch className="pointer-events-none absolute -right-6 top-2 h-32 rotate-[155deg] text-gold/[0.14] transition-transform duration-1000 ease-out-expo group-hover:rotate-[147deg] group-hover:scale-110" />

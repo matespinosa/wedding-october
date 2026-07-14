@@ -1,9 +1,8 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import Image from "next/image";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 import { RoseBloom } from "@/components/ui/Florals";
+import { ParallaxImage } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
 import { TextReveal } from "@/components/ui/TextReveal";
 import { site } from "@/lib/content";
@@ -23,17 +22,8 @@ function Frame({
   className?: string;
   priority?: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  // Parallax interno: la imagen se desplaza dentro del marco al hacer scroll.
-  const y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"]);
-
   return (
     <motion.div
-      ref={ref}
       initial={{ opacity: 0, y: 60, filter: "blur(10px)" }}
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: true, amount: 0.25 }}
@@ -43,20 +33,20 @@ function Frame({
         className,
       )}
     >
-      <motion.div style={{ y }} className="absolute inset-[-8%]">
-        <Image
-          src={photo.src}
-          alt={photo.alt}
-          fill
-          sizes="(max-width: 768px) 100vw, 45vw"
-          priority={priority}
-          className="object-cover transition-transform duration-[1600ms] ease-out-expo group-hover:scale-105"
+      <ParallaxImage
+        src={photo.src}
+        alt={photo.alt}
+        sizes="(max-width: 768px) 100vw, 45vw"
+        priority={priority}
+        amount={54}
+        className="h-full w-full"
+        imgClassName="transition-transform duration-[1600ms] ease-out-expo group-hover:scale-105"
+      >
+        <span
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent opacity-70 transition-opacity duration-700 group-hover:opacity-40"
         />
-      </motion.div>
-      <span
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent opacity-70 transition-opacity duration-700 group-hover:opacity-40"
-      />
+      </ParallaxImage>
     </motion.div>
   );
 }

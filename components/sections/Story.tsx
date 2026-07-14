@@ -4,6 +4,7 @@ import { motion, useScroll, useSpring } from "framer-motion";
 import { useRef } from "react";
 import { ArtFrame } from "@/components/ui/ArtFrame";
 import { FloralBranch } from "@/components/ui/Florals";
+import { Parallax } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { site } from "@/lib/content";
@@ -30,32 +31,35 @@ function Moment({ moment, index }: { moment: MomentData; index: number }) {
         />
       </span>
 
-      <Reveal
-        delay={0.1}
+      <Parallax
+        mobileOnly
+        amount={16}
         className={cn(
           even ? "md:order-1 md:pr-12 md:text-right" : "md:order-2 md:pl-12",
         )}
       >
-        <span className="text-[11px] font-medium uppercase tracking-[0.35em] text-bronze">
-          Capítulo · 0{index + 1}
-        </span>
-        <h3 className="mt-4 font-serif text-3xl font-light text-balance text-ink md:text-4xl">
-          {moment.title}
-        </h3>
-        <p
-          className={cn(
-            "mt-4 max-w-md text-[15px] leading-[1.85] text-ink/60",
-            even && "md:ml-auto",
-          )}
-        >
-          {moment.text}
-        </p>
-      </Reveal>
+        <Reveal delay={0.1}>
+          <span className="text-[11px] font-medium uppercase tracking-[0.35em] text-bronze">
+            Capítulo · 0{index + 1}
+          </span>
+          <h3 className="mt-4 font-serif text-3xl font-light text-balance text-ink md:text-4xl">
+            {moment.title}
+          </h3>
+          <p
+            className={cn(
+              "mt-4 max-w-md text-[15px] leading-[1.85] text-ink/60",
+              even && "md:ml-auto",
+            )}
+          >
+            {moment.text}
+          </p>
+        </Reveal>
+      </Parallax>
 
       <Reveal
         delay={0.22}
         y={44}
-        className={cn(even ? "md:order-2" : "md:order-1")}
+        className={cn("hidden md:block", even ? "md:order-2" : "md:order-1")}
       >
         <ArtFrame word={moment.word} index={index} />
       </Reveal>
@@ -97,7 +101,7 @@ export function Story() {
 
         <ol
           ref={listRef}
-          className="relative mt-20 flex flex-col gap-20 md:mt-32 md:gap-36"
+          className="relative mt-16 flex flex-col gap-14 md:mt-32 md:gap-36"
         >
           {/* Riel + trazo dorado que avanza con el scroll */}
           <div

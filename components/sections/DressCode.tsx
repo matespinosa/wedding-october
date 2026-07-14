@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { site } from "@/lib/content";
-import { draw, EASE_OUT } from "@/lib/motion";
+import { draw } from "@/lib/motion";
 
 /* ————————————————————————————————————————————————
    Ilustraciones de moda en línea continua — dibujadas a mano
@@ -112,30 +112,13 @@ function CodeColumn({
         <h3 className="mt-3 font-serif text-3xl font-light italic text-cream md:text-4xl">
           {group.garment}
         </h3>
-        <ul className="mt-5 space-y-1.5 text-[14px] leading-relaxed text-cream/55">
-          {group.notes.map((note) => (
-            <li key={note}>{note}</li>
-          ))}
-        </ul>
-
-        {/* Paleta sugerida */}
-        <div className="mt-7 flex items-center justify-center gap-3">
-          {group.palette.map((swatch, i) => (
-            <motion.span
-              key={swatch.name}
-              initial={{ opacity: 0, scale: 0.4 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.3 + i * 0.08 }}
-              whileHover={{ scale: 1.25, y: -3 }}
-              title={swatch.name}
-              className="block size-6 cursor-default rounded-full border border-cream/25 shadow-inner"
-              style={{ backgroundColor: swatch.hex }}
-            >
-              <span className="sr-only">{swatch.name}</span>
-            </motion.span>
-          ))}
-        </div>
+        {group.notes.length > 0 && (
+          <ul className="mt-5 space-y-1.5 text-[14px] leading-relaxed text-cream/55">
+            {group.notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        )}
       </Reveal>
     </div>
   );

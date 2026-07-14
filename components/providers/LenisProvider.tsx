@@ -1,5 +1,7 @@
 "use client";
 
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import {
   createContext,
@@ -9,6 +11,10 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 type LenisApi = {
   scrollTo: (target: string | number, opts?: { offset?: number }) => void;
@@ -38,15 +44,20 @@ export function LenisProvider({ children }: { children: ReactNode }) {
     });
     lenisRef.current = lenis;
 
-    let raf = 0;
-    const loop = (time: number) => {
-      lenis.raf(time);
-      raf = requestAnimationFrame(loop);
+    /* Sincroniza GSAP ScrollTrigger con el scroll suave de Lenis:
+       cada frame lo controla el ticker de GSAP y ScrollTrigger se
+       actualiza en cada evento de scroll de Lenis. */
+    lenis.on("scroll", ScrollTrigger.update);
+
+    const onTick = (time: number) => {
+      lenis.raf(time * 1000);
     };
-    raf = requestAnimationFrame(loop);
+    gsap.ticker.add(onTick);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      cancelAnimationFrame(raf);
+      lenis.off("scroll", ScrollTrigger.update);
+      gsap.ticker.remove(onTick);
       lenis.destroy();
       lenisRef.current = null;
     };

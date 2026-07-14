@@ -14,6 +14,7 @@ import { useLenis } from "@/components/providers/LenisProvider";
 import { useSiteReady } from "@/components/providers/load-context";
 import { Button } from "@/components/ui/Button";
 import { FloralBranch, RoseBloom } from "@/components/ui/Florals";
+import { useParallax } from "@/components/ui/Parallax";
 import { RotatingBadge } from "@/components/ui/RotatingBadge";
 import { TextReveal } from "@/components/ui/TextReveal";
 import { site } from "@/lib/content";
@@ -49,8 +50,11 @@ export function Hero() {
   });
   const yContent = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const yFlorals = useTransform(scrollYProgress, [0, 1], [0, 260]);
-  const yPhoto = useTransform(scrollYProgress, [0, 1], [-18, 52]);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  /* Parallax GSAP de la foto del arco (capa interior, no interfiere con la
+     animación de entrada de framer). */
+  const photoRef = useParallax<HTMLSpanElement>(32);
 
   /* Parallax de mouse en las flores, con muelle perezoso. */
   const mx = useMotionValue(0);
@@ -168,22 +172,23 @@ export function Hero() {
                 transition={{ duration: 1.5, ease: EASE_OUT, delay: 1.05 }}
                 className="relative block aspect-[10/13] h-[clamp(320px,46vh,500px)] max-w-[86vw] overflow-hidden rounded-b-[22px] rounded-t-full"
               >
-                {/* Foto con zoom de asentamiento + parallax interno */}
+                {/* Foto con zoom de asentamiento (framer) + parallax GSAP interno */}
                 <motion.span
                   initial={{ scale: 1.18 }}
                   animate={ready ? { scale: 1.06 } : {}}
                   transition={{ duration: 2.2, ease: EASE_OUT, delay: 1.05 }}
-                  style={{ y: yPhoto }}
                   className="absolute inset-[-6%] block"
                 >
-                  <Image
-                    src="/images/hero.jpg"
-                    alt=""
-                    fill
-                    priority
-                    sizes="(max-width: 768px) 86vw, 420px"
-                    className="object-cover object-[50%_35%]"
-                  />
+                  <span ref={photoRef} className="absolute inset-[-12%] block">
+                    <Image
+                      src="/images/hero.jpg"
+                      alt=""
+                      fill
+                      priority
+                      sizes="(max-width: 768px) 86vw, 420px"
+                      className="object-cover object-[50%_35%]"
+                    />
+                  </span>
                 </motion.span>
 
                 {/* Velos crema arriba y abajo: funden la foto con el lienzo

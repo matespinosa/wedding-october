@@ -61,27 +61,17 @@ export const site = {
     moments: [
       {
         title: "El encuentro",
-        text: "Hace casi cuatro años y medio, Dios cruzó nuestros caminos. Lo que parecía una casualidad era, en realidad, el comienzo de todo.",
+        text: "Hace casi cuatro años y medio, Dios cruzó nuestros caminos. Lo que parecía casualidad era el comienzo de todo.",
         word: "Encuentro",
       },
       {
         title: "Mejores amigos",
-        text: "Lo que comenzó como una amistad llena de conversaciones interminables se convirtió en una historia de confianza, apoyo y crecimiento.",
+        text: "Una amistad de conversaciones interminables se volvió confianza, apoyo y refugio en cada momento importante.",
         word: "Amistad",
       },
       {
-        title: "Horas de conversación",
-        text: "Podíamos hablar durante horas y el tiempo nunca era suficiente. Cada conversación era un lugar al que queríamos volver.",
-        word: "Palabras",
-      },
-      {
-        title: "Confidentes",
-        text: "Fuimos confidentes en los momentos más importantes de nuestras vidas: el primer refugio en los días buenos y también en los difíciles.",
-        word: "Refugio",
-      },
-      {
-        title: "El amor siempre estuvo",
-        text: "Aunque el amor siempre estuvo presente, esperó pacientemente hasta el momento perfecto para florecer.",
+        title: "El amor esperó",
+        text: "Aunque el amor siempre estuvo, esperó con paciencia el momento perfecto para florecer.",
         word: "Amor",
       },
       {
@@ -95,7 +85,7 @@ export const site = {
   gallery: {
     quote: "Cada paso nos trajo hasta aquí.",
     photos: [
-      { src: "/images/propuesta.jpg", alt: "Mateo y Julieth contemplando el parque desde un mirador" },
+      { src: "/images/propose.JPG", alt: "Mateo pidiéndole matrimonio a Julieth, arrodillado frente a la baranda del parque" },
       { src: "/images/other.jpg", alt: "Mateo y Julieth sentados en la escalinata entre columnas de piedra" },
       { src: "/images/detalle.jpg", alt: "Julieth ajustando el tacón blanco antes de la ceremonia" },
     ],
@@ -156,16 +146,16 @@ export const site = {
     men: {
       label: "Ellos",
       garment: "Traje y corbata",
-      notes: ["Traje en tonos verdes", "Corbata o corbatín — a tu elección"],
+      notes: [],
       palette: [{ name: "Verde", hex: "#2F4A3C" }],
     },
     women: {
       label: "Ella",
       garment: "Vestido de novia",
-      notes: ["Vestido largo blanco", "El color reservado para la novia"],
+      notes: [],
       palette: [{ name: "Blanco", hex: "#FFFFFF" }],
     },
-    note: "El color blanco está reservado para la novia.",
+    note: "El color blanco estará reservado para la novia.",
   },
 
   rsvp: {

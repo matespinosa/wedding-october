@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { FloralBranch, RoseBloom } from "@/components/ui/Florals";
+import { ParallaxImage } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
 import { TextReveal } from "@/components/ui/TextReveal";
 import { site } from "@/lib/content";
@@ -29,12 +29,13 @@ export function Closing() {
     >
       {/* Foto real de fondo con velo oscuro */}
       <div aria-hidden className="absolute inset-0">
-        <Image
+        <ParallaxImage
           src={site.closing.image}
           alt=""
-          fill
           sizes="100vw"
-          className="object-cover object-center opacity-40"
+          amount={72}
+          className="h-full w-full"
+          imgClassName="object-center opacity-40"
         />
       </div>
       <div
