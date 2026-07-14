@@ -150,12 +150,12 @@ export const site = {
       palette: [{ name: "Verde", hex: "#2F4A3C" }],
     },
     women: {
-      label: "Ella",
-      garment: "Vestido de novia",
+      label: "Ellas",
+      garment: "Vestido elegante largo",
       notes: [],
       palette: [{ name: "Blanco", hex: "#FFFFFF" }],
     },
-    note: "El color blanco estará reservado para la novia.",
+    note: "El color blanco es exclusivo para la novia.",
   },
 
   rsvp: {
