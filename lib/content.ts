@@ -150,8 +150,8 @@ export const site = {
       palette: [{ name: "Verde claro", hex: "#A8C5A0" }],
     },
     women: {
-      label: "Ella",
-      garment: "Vestido de novia",
+      label: "Ellas",
+      garment: "Vestido elegante largo",
       notes: [],
       palette: [{ name: "Blanco", hex: "#FFFFFF" }],
     },
