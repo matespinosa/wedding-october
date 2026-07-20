@@ -52,10 +52,23 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Si el viewport cambia a desktop, el panel móvil nunca debe quedar abierto
+  // ni conservar el bloqueo de scroll.
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const onChange = () => media.matches && setOpen(false);
+    onChange();
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+
   const go = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
     setOpen(false);
-    scrollTo(href);
+    // El menú detiene Lenis mientras está abierto. Esperamos al siguiente
+    // frame para que el cierre quite el bloqueo antes de iniciar el scroll.
+    start();
+    window.requestAnimationFrame(() => scrollTo(href));
   };
 
   return (

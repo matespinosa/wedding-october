@@ -147,7 +147,7 @@ export const site = {
       label: "Ellos",
       garment: "Traje y corbata",
       notes: [],
-      palette: [{ name: "Verde", hex: "#2F4A3C" }],
+      palette: [{ name: "Verde claro", hex: "#A8C5A0" }],
     },
     women: {
       label: "Ella",
@@ -155,7 +155,7 @@ export const site = {
       notes: [],
       palette: [{ name: "Blanco", hex: "#FFFFFF" }],
     },
-    note: "El color blanco estará reservado para la novia.",
+    note: "El verde claro estará reservado para la corte y el blanco para la novia.",
   },
 
   rsvp: {
@@ -174,7 +174,7 @@ export const site = {
     verseRef: "Colosenses 3:14",
     quote: "No podemos esperar para celebrar este día tan especial contigo.",
     farewell: "Con todo nuestro amor,",
-    tagline: "Con amor · La Calera, Bogotá · 2026",
+    tagline: "Con amor · 2026",
     image: "/images/cierre.jpg",
   },
 } as const;

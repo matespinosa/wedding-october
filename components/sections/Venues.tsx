@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, CalendarPlus, Church, Clock, MapPin, Wine } from "lucide-react";
+import { ArrowUpRight, BookOpen, CalendarPlus, Clock, MapPin, Wine } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { FloralBranch, RingsOrnament } from "@/components/ui/Florals";
@@ -63,7 +63,7 @@ function VenueCard({
         </span>
       </ParallaxImage>
 
-      <div className="relative p-8 md:p-10">
+      <div className="relative flex flex-1 flex-col p-8 md:p-10">
         <FloralBranch className="pointer-events-none absolute -right-6 top-2 h-32 rotate-[155deg] text-gold/[0.14] transition-transform duration-1000 ease-out-expo group-hover:rotate-[147deg] group-hover:scale-110" />
 
         <span className="grid size-12 place-items-center rounded-full border border-gold/40 text-gold-deep transition-colors duration-500 group-hover:border-gold group-hover:bg-gold/10">
@@ -75,38 +75,40 @@ function VenueCard({
         </h3>
 
         <div className="mt-5 space-y-2.5 text-[14px] leading-relaxed text-ink/60">
-        <p className="flex items-center gap-2.5">
-          <MapPin size={15} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
-          {venue.address} · {venue.city}
-        </p>
-        <p className="flex items-center gap-2.5">
-          <Clock size={15} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
-          {venue.time}
-        </p>
-      </div>
+          <p className="flex items-center gap-2.5">
+            <MapPin size={15} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
+            {venue.address} · {venue.city}
+          </p>
+          <p className="flex items-center gap-2.5">
+            <Clock size={15} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
+            {venue.time}
+          </p>
+        </div>
 
-      <div aria-hidden className="my-8 border-t border-dashed border-ink/15" />
+        <div className="mt-auto">
+          <div aria-hidden className="my-8 border-t border-dashed border-ink/15" />
 
-      <div className="flex flex-wrap gap-3">
-        <Button
-          href={venue.mapsUrl}
-          target="_blank"
-          size="sm"
-          magnetic={false}
-          icon={<ArrowUpRight size={13} strokeWidth={2} />}
-        >
-          Cómo llegar
-        </Button>
-        <Button
-          href={googleCalendarUrl(venue.calendar)}
-          target="_blank"
-          size="sm"
-          variant="outline"
-          magnetic={false}
-          icon={<CalendarPlus size={13} strokeWidth={1.75} />}
-        >
-          Agendar
-        </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              href={venue.mapsUrl}
+              target="_blank"
+              size="sm"
+              magnetic={false}
+              icon={<ArrowUpRight size={13} strokeWidth={2} />}
+            >
+              Cómo llegar
+            </Button>
+            <Button
+              href={googleCalendarUrl(venue.calendar)}
+              target="_blank"
+              size="sm"
+              variant="outline"
+              magnetic={false}
+              icon={<CalendarPlus size={13} strokeWidth={1.75} />}
+            >
+              Agendar
+            </Button>
+          </div>
         </div>
       </div>
     </motion.article>
@@ -144,7 +146,7 @@ export function Venues() {
         <div className="mt-14 grid gap-6 md:mt-20 md:grid-cols-2 md:gap-10">
           <VenueCard
             venue={site.venues.ceremony}
-            icon={<Church size={20} strokeWidth={1.5} />}
+            icon={<BookOpen size={20} strokeWidth={1.75} />}
             delay={0}
           />
           <VenueCard

@@ -12,25 +12,14 @@ import { draw } from "@/lib/motion";
    ———————————————————————————————————————————————— */
 
 const SUIT_PATHS = [
-  // silueta izquierda: hombro, brazo, manga
-  "M108,44 C96,45 90,50 76,56 C59,63 51,82 48,108 C45,138 50,178 57,210 L85,205 C81,170 79,146 81,126",
-  // silueta derecha
-  "M112,44 C124,45 130,50 144,56 C161,63 169,82 172,108 C175,138 170,178 163,210 L135,205 C139,170 141,146 139,126",
-  // cuerpo y ruedo del saco
-  "M81,126 C83,172 85,216 89,258 L131,258 C135,216 137,172 139,126",
-  // solapas
-  "M107,46 C99,68 95,96 97,122 M97,122 L110,99",
-  "M113,46 C121,68 125,96 123,122 M123,122 L110,99",
-  // camisa y corbata
-  "M96,52 L110,82 L124,52",
-  "M110,82 L105,92 L107,146 L110,155 L113,146 L115,92 Z",
-  // pañuelo de bolsillo
-  "M88,118 L103,115 L97,106 Z",
-  // botones
-  "M115,172 a2.2,2.2 0 1,0 0.1,0",
-  "M115,194 a2.2,2.2 0 1,0 0.1,0",
-  // pantalón
-  "M89,258 C90,286 92,304 94,318 M131,258 C130,286 128,304 126,318 M110,262 L110,318",
+  // Un solo contorno une cuello, hombros, mangas y cuerpo del saco.
+  "M102,48 L92,56 L50,68 C41,71 37,80 35,96 C30,140 30,205 31,248 L34,292 L63,292 L72,141 C72,190 73,245 76,292 C88,300 100,299 110,289 C120,299 132,300 144,292 C147,245 148,190 148,141 L157,292 L186,292 L189,248 C190,205 190,140 185,96 C183,80 179,71 170,68 L128,56 L118,48 C112,44 108,44 102,48 Z",
+  // Dos puntas de camisa amplias dejan libre el centro del cuello.
+  "M92,56 L102,48 L109,63 L99,77 Z M128,56 L118,48 L111,63 L121,77 Z",
+  // El nudo conecta ambas puntas y comparte su base con la hoja de la corbata.
+  "M109,63 L106,72 L108,82 L112,82 L114,72 L111,63 Z M108,82 L108,141 L110,152 L112,141 L112,82",
+  // Solapas ancladas a los hombros; se unen al frente y a la abertura central.
+  "M92,56 L82,89 L88,98 L110,188 L132,98 L138,89 L128,56 M110,188 L110,289",
 ];
 
 const GOWN_PATHS = [
