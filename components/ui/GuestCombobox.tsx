@@ -93,7 +93,7 @@ export function GuestCombobox({
         autoFocus={autoFocus}
         placeholder="Busca o escribe el nombre"
         className={cn(
-          "w-full border-b border-ink/15 bg-transparent pb-3 pt-2 text-[18px] text-ink outline-none transition-colors duration-500 placeholder:text-ink/35 focus:border-gold-deep",
+          "w-full rounded-full border border-gold/50 bg-white/20 px-5 py-3.5 text-[18px] text-ink outline-none backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/40 hover:border-gold/75 hover:bg-white/30 focus:border-bronze focus:bg-white/35 focus:ring-2 focus:ring-gold/30",
           className,
         )}
         value={value}
@@ -114,7 +114,7 @@ export function GuestCombobox({
           ref={listRef}
           role="listbox"
           aria-label="Invitados"
-          className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-2xl border border-ink/10 bg-cream/95 p-1.5 shadow-[0_30px_70px_-30px_rgba(27,27,27,0.4)] backdrop-blur-xl"
+          className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-2xl border border-white/60 bg-white/55 p-1.5 shadow-[0_30px_70px_-30px_rgba(27,27,27,0.4)] backdrop-blur-xl"
         >
           {matches.map((name, i) => (
             <li

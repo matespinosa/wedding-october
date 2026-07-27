@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { useLenis } from "@/components/providers/LenisProvider";
-import { FloralBranch, RoseBloom } from "@/components/ui/Florals";
+import { FloralBranch } from "@/components/ui/Florals";
 import { site } from "@/lib/content";
 
 /* ————————————————————————————————————————————————
@@ -19,28 +19,60 @@ import { site } from "@/lib/content";
 
    Lo que sale del sobre NO es una maqueta: es el sitio real.
    El contenido vive dentro de `stage`, recortado y escalado al
-   hueco del sobre. Al abrir, la solapa gira, la página se desliza
-   fuera y se expande hasta ocupar la pantalla; recién ahí el
-   recorte se suelta y el scroll se libera.
+   hueco del sobre. Al abrir, la solapa gira proyectando su sombra,
+   la página se desliza fuera y se expande hasta ocupar la pantalla;
+   recién ahí el recorte se suelta y el scroll se libera.
+
+   Dos formatos:
+   · portrait  — móvil: el sobre ocupa toda la pantalla, la solapa
+                 baja en uve suave y el lacre se apoya en el vértice.
+   · landscape — desde 768px: sobre apaisado de cuatro solapas.
    ———————————————————————————————————————————————— */
 
-/** Punto (en % de la caja) donde se juntan las cuatro solapas: ahí va el lacre. */
-const TIP = 58;
+type Variant = "portrait" | "landscape";
 
-/* Recortes de las cuatro solapas de papel. Todas convergen en el mismo
-   vértice, así que juntas cubren el rectángulo completo. */
-const CLIP = {
-  top: `polygon(0% 0%, 100% 0%, 50% ${TIP}%)`,
-  left: `polygon(0% 0%, 50% ${TIP}%, 0% 100%)`,
-  right: `polygon(100% 0%, 50% ${TIP}%, 100% 100%)`,
-  bottom: `polygon(0% 100%, 50% ${TIP}%, 100% 100%)`,
-} as const;
+type EnvelopeCfg = {
+  /** Vértice (en % de la altura) donde se apoya el lacre. */
+  tip: number;
+  box: string;
+  /** Hueco interior, en fracción de la caja: de ahí sale la página. */
+  slot: { x: number; y: number; w: number; h: number };
+  clip: {
+    top: string;
+    /** Apaisado: las tres solapas restantes. */
+    left?: string;
+    right?: string;
+    bottom?: string;
+    /** Vertical: un único cuerpo. */
+    body?: string;
+  };
+};
 
-/** Hueco interior del sobre, en fracción de la caja: de ahí sale la página. */
-const SLOT = { x: 0.06, y: 0.05, w: 0.88, h: 0.89 };
+const GEO: Record<Variant, EnvelopeCfg> = {
+  landscape: {
+    tip: 58,
+    box: "relative aspect-[1.44/1] w-[min(88vw,34rem)] rounded-[10px]",
+    slot: { x: 0.06, y: 0.05, w: 0.88, h: 0.89 },
+    clip: {
+      top: "polygon(0% 0%, 100% 0%, 50% 58%)",
+      left: "polygon(0% 0%, 50% 58%, 0% 100%)",
+      right: "polygon(100% 0%, 50% 58%, 100% 100%)",
+      bottom: "polygon(0% 100%, 50% 58%, 100% 100%)",
+    },
+  },
+  portrait: {
+    tip: 56,
+    box: "relative h-full w-full",
+    slot: { x: 0.08, y: 0.26, w: 0.84, h: 0.7 },
+    clip: {
+      /** Solapa a sangre con el borde inferior en uve suave. */
+      top: "polygon(0% 0%, 100% 0%, 100% 46%, 50% 56%, 0% 46%)",
+      /** Cuerpo del sobre, con la uve complementaria. */
+      body: "polygon(0% 45%, 50% 55%, 100% 45%, 100% 100%, 0% 100%)",
+    },
+  },
+};
 
-/** Caja del sobre: misma medida en la capa trasera y en la delantera. */
-const ENV_BOX = "relative aspect-[1.44/1] w-[min(88vw,34rem)]";
 const LAYER = "pointer-events-none fixed inset-0 [perspective:1700px]";
 const CENTER = "absolute inset-0 grid place-items-center";
 
@@ -64,6 +96,11 @@ export function EnvelopeGate({
 }) {
   const { stop, start, scrollTo } = useLenis();
   const [gone, setGone] = useState(false);
+  /* El servidor siempre pinta el formato apaisado; un layout effect lo
+     corrige antes del primer pintado, así no hay salto ni desajuste de
+     hidratación. */
+  const [variant, setVariant] = useState<Variant>("landscape");
+  const variantRef = useRef<Variant>("landscape");
 
   const veilRef = useRef<HTMLDivElement>(null);
   const backLayerRef = useRef<HTMLDivElement>(null);
@@ -74,13 +111,17 @@ export function EnvelopeGate({
   const frontLayerRef = useRef<HTMLDivElement>(null);
   const frontBoxRef = useRef<HTMLDivElement>(null);
   const flapRef = useRef<HTMLDivElement>(null);
+  const flapBackRef = useRef<HTMLSpanElement>(null);
+  const flapShadowRef = useRef<HTMLSpanElement>(null);
+  const flapShadowInnerRef = useRef<HTMLSpanElement>(null);
   const flapTextRef = useRef<HTMLDivElement>(null);
   const sealRef = useRef<HTMLButtonElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
-  const eyebrowRef = useRef<HTMLParagraphElement>(null);
+  const eyebrowRef = useRef<HTMLDivElement>(null);
 
   const geoRef = useRef<Geo | null>(null);
   const stRef = useRef({ p: 0, pull: 0 });
+  const flapRef2 = useRef({ deg: 0 });
   const openedRef = useRef(false);
   const idleRef = useRef<gsap.core.Tween[]>([]);
   const onOpenRef = useRef(onOpen);
@@ -100,10 +141,11 @@ export function EnvelopeGate({
     /* Sin layout todavía: mejor no escribir nada que escribir NaN. */
     if (!envW || !envH || !vw || !vh) return null;
 
-    const cardW = envW * SLOT.w;
-    const cardH = envH * SLOT.h;
-    const cardX = (vw - envW) / 2 + envW * SLOT.x;
-    const cardY = (vh - envH) / 2 + envH * SLOT.y;
+    const slot = GEO[variantRef.current].slot;
+    const cardW = envW * slot.w;
+    const cardH = envH * slot.h;
+    const cardX = (vw - envW) / 2 + envW * slot.x;
+    const cardY = (vh - envH) / 2 + envH * slot.y;
 
     /* «cover»: la página llena el hueco sin bandas; lo que sobra se recorta. */
     const s = Math.max(cardW / vw, cardH / vh);
@@ -149,12 +191,61 @@ export function EnvelopeGate({
     }px ${g.insetX * e}px round ${g.radius * e}px)`;
   }, []);
 
+  /* ——— Solapa: giro + sombra proyectada.
+     La sombra nace del pliegue, crece y se difumina mientras la solapa se
+     levanta, y desaparece cuando queda tumbada por detrás. ——— */
+  const renderFlap = useCallback(() => {
+    const deg = flapRef2.current.deg;
+    const t = Math.min(1, Math.abs(deg) / 180);
+    /* 0 cerrada → 1 a media apertura → 0 completamente abierta. */
+    const lift = Math.sin(t * Math.PI);
+
+    const flap = flapRef.current;
+    if (flap) {
+      flap.style.transform = `rotateX(${deg}deg)`;
+      /* Sombra de contacto: sigue el filo en uve del recorte y se
+         despega del papel a medida que la solapa se levanta. */
+      const contact = 1 - Math.min(1, t * 3);
+      flap.style.filter = `drop-shadow(0 ${4 + 5 * lift}px ${
+        5 + 9 * lift
+      }px rgba(88, 66, 38, ${0.3 * contact + 0.12 * lift}))`;
+    }
+
+    /* Sombra proyectada sobre el cuerpo: nace en el pliegue, se difumina
+       y se acorta según la solapa se aleja. */
+    const shadow = flapShadowRef.current;
+    if (shadow) {
+      shadow.style.opacity = String(0.38 * lift);
+      shadow.style.filter = `blur(${10 + 22 * lift}px)`;
+    }
+    const shadowInner = flapShadowInnerRef.current;
+    if (shadowInner) shadowInner.style.transform = `scaleY(${1 - 0.6 * t})`;
+
+    /* Pasado el ecuador vemos el reverso del papel, que está en sombra. */
+    const back = flapBackRef.current;
+    if (back) back.style.opacity = String(Math.max(0, (t - 0.45) / 0.55) * 0.42);
+  }, []);
+
+  /* Formato según viewport, resuelto antes del primer pintado. */
+  useLayoutEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)");
+    const apply = () => {
+      const next: Variant = media.matches ? "landscape" : "portrait";
+      variantRef.current = next;
+      setVariant(next);
+    };
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
+
   /* Estado inicial antes del primer pintado: nada de destellos de página. */
   useLayoutEffect(() => {
     if (!stageRef.current) return;
     geoRef.current = measure();
     render();
-  }, [measure, render]);
+    renderFlap();
+  }, [measure, render, renderFlap, variant]);
 
   /* ——— Apertura ——— */
   const open = useCallback(() => {
@@ -170,9 +261,7 @@ export function EnvelopeGate({
     geoRef.current = measure();
     const g = geoRef.current;
     /* Cuánto asoma la página: nunca tanto como para salirse por arriba. */
-    const pullTo = g
-      ? Math.max(0, Math.min(g.envH * 0.62, g.y - 16))
-      : 0;
+    const pullTo = g ? Math.max(0, Math.min(g.envH * 0.62, g.y - 16)) : 0;
     const st = stRef.current;
 
     const tl = gsap.timeline({
@@ -212,10 +301,16 @@ export function EnvelopeGate({
       })
       /* El texto de la solapa se apaga antes de que el papel se voltee */
       .to(flapTextRef.current, { opacity: 0, duration: 0.3 * k }, "<")
-      /* La solapa se abre hacia atrás sobre su bisagra superior */
+      /* La solapa se abre hacia atrás sobre su bisagra superior,
+         arrastrando su sombra sobre el cuerpo del sobre */
       .to(
-        flapRef.current,
-        { rotateX: -178, duration: 1.05 * k, ease: "power3.inOut" },
+        flapRef2.current,
+        {
+          deg: -178,
+          duration: 1.05 * k,
+          ease: "power3.inOut",
+          onUpdate: renderFlap,
+        },
         "-=0.32",
       )
       /* Pasado el ecuador del giro, la página pasa delante del sobre y
@@ -244,7 +339,7 @@ export function EnvelopeGate({
         { opacity: 0, duration: 0.8 * k, ease: "power2.inOut" },
         "-=1.05",
       );
-  }, [measure, render, scrollTo, start]);
+  }, [measure, render, renderFlap, scrollTo, start]);
 
   /* ——— Bloqueo de scroll + entrada del sobre ——— */
   useEffect(() => {
@@ -264,7 +359,7 @@ export function EnvelopeGate({
     window.addEventListener("resize", onResize);
 
     /* La caja del sobre puede llegar a su tamaño después del primer commit
-       (fuentes, layout). Reencajamos la página en cuanto eso pase. */
+       (fuentes, layout, cambio de formato). Reencajamos en cuanto pase. */
     const ro = new ResizeObserver(onResize);
     if (frontBoxRef.current) ro.observe(frontBoxRef.current);
 
@@ -392,6 +487,50 @@ export function EnvelopeGate({
     if (!gone) sealRef.current?.focus({ preventScroll: true });
   }, [gone]);
 
+  const cfg = GEO[variant];
+  const portrait = variant === "portrait";
+
+  const seal = (
+    <div
+      className="absolute left-1/2 z-40 -translate-x-1/2 -translate-y-1/2"
+      style={{ top: `${cfg.tip}%` }}
+    >
+      <button
+        ref={sealRef}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          open();
+        }}
+        aria-label={site.gate.hint}
+        className="block rounded-full"
+      >
+        <Image
+          src="/images/sello-circular-dorado-transparente.png"
+          alt=""
+          width={220}
+          height={220}
+          priority
+          className="size-[clamp(4.6rem,19vw,6.5rem)] cursor-pointer drop-shadow-[0_10px_20px_rgba(27,27,27,0.32)] transition-transform duration-500 ease-out-expo hover:scale-[1.07] active:scale-95"
+        />
+      </button>
+    </div>
+  );
+
+  const names = (
+    <>
+      <span className="font-script text-[clamp(2.6rem,13vw,4.4rem)] leading-[0.9] text-bronze md:text-[clamp(1.85rem,3vw,2.45rem)]">
+        {site.couple.him}
+      </span>
+      <span className="font-script text-[clamp(1.4rem,6vw,2.1rem)] leading-[1.1] text-gold-deep md:text-[clamp(1rem,1.6vw,1.3rem)]">
+        y
+      </span>
+      <span className="font-script text-[clamp(2.6rem,13vw,4.4rem)] leading-[0.9] text-bronze md:text-[clamp(1.85rem,3vw,2.45rem)]">
+        {site.couple.her}
+      </span>
+    </>
+  );
+
   return (
     <>
       {!gone && (
@@ -408,11 +547,11 @@ export function EnvelopeGate({
               <div className="animate-drift absolute -left-40 -top-40 size-[40rem] rounded-full bg-gold/[0.14] blur-3xl" />
               <div className="animate-drift-slow absolute -bottom-48 -right-32 size-[44rem] rounded-full bg-sand/60 blur-3xl" />
 
-              {/* Botánica de encuadre, como en el hero */}
-              <FloralBranch className="absolute -left-12 -top-10 h-[22rem] -rotate-[142deg] text-gold/25 md:h-[32rem]" />
-              <FloralBranch className="absolute -bottom-16 -right-10 h-[20rem] rotate-[24deg] text-gold/20 md:h-[30rem]" />
-              <RoseBloom className="absolute left-[6%] bottom-[12%] h-24 -rotate-12 text-gold/15 md:h-36" />
-              <RoseBloom className="absolute right-[8%] top-[10%] hidden h-28 rotate-[18deg] text-gold/[0.14] md:block" />
+              {/* Botánica de encuadre — solo dos esquinas, bien suaves */}
+              <div className="hidden md:block">
+                <FloralBranch className="absolute -left-16 -top-14 h-[22rem] -rotate-[142deg] text-gold/15" />
+                <FloralBranch className="absolute -bottom-20 -right-14 h-[20rem] rotate-[24deg] text-gold/12" />
+              </div>
 
               <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_45%,transparent,rgba(27,27,27,0.07))]" />
             </div>
@@ -421,21 +560,26 @@ export function EnvelopeGate({
           {/* Capa trasera: el papel del sobre por detrás de la página */}
           <div ref={backLayerRef} className={`${LAYER} z-[81]`}>
             <div className={CENTER}>
-              <div ref={backBoxRef} className={ENV_BOX}>
-                {/* Ramas asomando por detrás del sobre */}
-                <div aria-hidden className="absolute inset-0">
-                  <FloralBranch className="absolute -left-[24%] -top-[34%] h-[13rem] -rotate-[128deg] text-gold/45 md:h-[19rem]" />
-                  <FloralBranch className="absolute -bottom-[32%] -right-[22%] h-[12rem] rotate-[38deg] text-gold/40 md:h-[17rem]" />
-                  <RoseBloom className="absolute -right-[14%] -top-[22%] h-20 rotate-[14deg] text-gold/35 md:h-28" />
-                </div>
+              <div ref={backBoxRef} className={cfg.box}>
+                {!portrait && (
+                  <span
+                    aria-hidden
+                    className="absolute -bottom-6 left-1/2 h-10 w-[86%] -translate-x-1/2 rounded-[50%] bg-ink/20 blur-2xl"
+                  />
+                )}
 
                 <span
                   aria-hidden
-                  className="absolute -bottom-6 left-1/2 h-10 w-[86%] -translate-x-1/2 rounded-[50%] bg-ink/20 blur-2xl"
+                  className={`paper absolute inset-0 ${
+                    portrait
+                      ? ""
+                      : "rounded-[10px] shadow-[0_40px_90px_-45px_rgba(27,27,27,0.55)]"
+                  }`}
                 />
+                {/* Boca del sobre: penumbra interior donde descansa la tarjeta */}
                 <span
                   aria-hidden
-                  className="paper absolute inset-0 rounded-[8px] shadow-[0_40px_90px_-45px_rgba(27,27,27,0.55)]"
+                  className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(90,68,42,0.16),transparent_28%)]"
                 />
               </div>
             </div>
@@ -449,16 +593,11 @@ export function EnvelopeGate({
         ref={stageLayerRef}
         className={gone ? undefined : "fixed inset-0 z-[82] [perspective:1700px]"}
       >
-        <div
-          ref={stageWrapRef}
-          className={gone ? undefined : "absolute inset-0"}
-        >
+        <div ref={stageWrapRef} className={gone ? undefined : "absolute inset-0"}>
           <div
             ref={stageRef}
             className={
-              gone
-                ? undefined
-                : "absolute left-0 top-0 h-full w-full overflow-hidden"
+              gone ? undefined : "absolute left-0 top-0 h-full w-full overflow-hidden"
             }
           >
             {children}
@@ -467,112 +606,162 @@ export function EnvelopeGate({
       </div>
 
       {!gone && (
-        /* Capa delantera: solapas, costuras y lacre — tapa la página */
+        /* Capa delantera: cuerpo del sobre, solapa y lacre — tapa la página */
         <div ref={frontLayerRef} className={`${LAYER} z-[83]`}>
           <div className={CENTER}>
             <div
               ref={frontBoxRef}
               onClick={open}
-              className={`${ENV_BOX} pointer-events-auto cursor-pointer`}
+              className={`${cfg.box} pointer-events-auto cursor-pointer`}
             >
-              {/* Solapas laterales */}
-              <span
-                aria-hidden
-                className="paper paper-shade-l absolute inset-0 z-[18]"
-                style={{ clipPath: CLIP.left }}
-              />
-              <span
-                aria-hidden
-                className="paper paper-shade-r absolute inset-0 z-[18]"
-                style={{ clipPath: CLIP.right }}
-              />
+              {portrait ? (
+                /* ——— Cuerpo del sobre en vertical ——— */
+                <>
+                  <span
+                    aria-hidden
+                    className="paper paper-shade-b absolute inset-0 z-20"
+                    style={{ clipPath: cfg.clip.body }}
+                  />
+                  {/* Volumen: penumbra en la boca y asiento en el canto bajo */}
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 z-[21] bg-[linear-gradient(to_bottom,rgba(120,92,56,0.11),transparent_24%,transparent_80%,rgba(120,92,56,0.08))]"
+                    style={{ clipPath: cfg.clip.body }}
+                  />
+                </>
+              ) : (
+                <>
+                  <span
+                    aria-hidden
+                    className="paper paper-shade-l absolute inset-0 z-[18]"
+                    style={{ clipPath: cfg.clip.left }}
+                  />
+                  <span
+                    aria-hidden
+                    className="paper paper-shade-r absolute inset-0 z-[18]"
+                    style={{ clipPath: cfg.clip.right }}
+                  />
+                  <span
+                    aria-hidden
+                    className="paper paper-shade-b absolute inset-0 z-20"
+                    style={{ clipPath: cfg.clip.bottom }}
+                  />
+                  {/* Costuras de los dobleces */}
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    className="absolute inset-0 z-[24] size-full"
+                  >
+                    <path
+                      d={`M0,100 L50,${cfg.tip} L100,100 M0,0 L50,${cfg.tip} L100,0`}
+                      fill="none"
+                      stroke="rgba(27,27,27,0.08)"
+                      strokeWidth="1"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                </>
+              )}
 
-              {/* Solapa inferior */}
-              <span
-                aria-hidden
-                className="paper paper-shade-b absolute inset-0 z-20"
-                style={{ clipPath: CLIP.bottom }}
-              />
+              {/* Texto del cuerpo, bajo el lacre — solo en vertical */}
+              {portrait && (
+                <div className="absolute inset-x-0 bottom-0 top-[56%] z-[25] flex flex-col items-center gap-6 px-8 pt-[14%] text-center">
+                  <p className="text-[13px] font-medium uppercase leading-[2] tracking-[0.34em] text-bronze">
+                    {site.gate.portraitLine}
+                  </p>
+                  <FloralBranch aria-hidden className="h-20 rotate-90 text-gold/45" />
+                </div>
+              )}
 
-              {/* Costuras de los dobleces */}
-              <svg
+              {/* Sombra proyectada de la solapa sobre el cuerpo del sobre.
+                  El desenfoque vive en el envoltorio: si fuera sobre el
+                  elemento recortado, el `clip-path` volvería a cortar el
+                  difuminado y el borde saldría duro. */}
+              <span
+                ref={flapShadowRef}
                 aria-hidden
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                className="absolute inset-0 z-[24] size-full"
+                className="pointer-events-none absolute inset-0 z-[28] opacity-0"
               >
-                <path
-                  d={`M0,100 L50,${TIP} L100,100 M0,0 L50,${TIP} L100,0`}
-                  fill="none"
-                  stroke="rgba(27,27,27,0.08)"
-                  strokeWidth="1"
-                  vectorEffect="non-scaling-stroke"
+                <span
+                  ref={flapShadowInnerRef}
+                  className="absolute inset-0 origin-top bg-[linear-gradient(to_bottom,rgba(72,50,26,0.88),rgba(72,50,26,0.34)_15%,transparent_38%)]"
+                  style={{ clipPath: cfg.clip.top }}
                 />
-              </svg>
+              </span>
 
               {/* Solapa superior, con los nombres */}
               <div
                 ref={flapRef}
                 className="paper paper-shade-t absolute inset-0 z-30 origin-top will-change-transform"
-                style={{ clipPath: CLIP.top }}
+                style={{ clipPath: cfg.clip.top }}
               >
+                {/* Reverso en penumbra: aparece al pasar el ecuador del giro */}
+                <span
+                  ref={flapBackRef}
+                  aria-hidden
+                  className="absolute inset-0 bg-[linear-gradient(to_top,rgba(58,42,22,0.9),rgba(58,42,22,0.45))] opacity-0"
+                />
+
+                {/* Canto del papel: una línea de luz sobre el filo doblado */}
+                <svg
+                  aria-hidden
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  className="absolute inset-0 size-full"
+                >
+                  <path
+                    d={
+                      portrait
+                        ? "M0,45.3 L50,55.3 L100,45.3"
+                        : `M0,0.6 L50,${cfg.tip - 0.8} L100,0.6`
+                    }
+                    fill="none"
+                    stroke="rgba(255,252,246,0.6)"
+                    strokeWidth="1.5"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </svg>
+
                 <div
                   ref={flapTextRef}
-                  className="flex h-[58%] flex-col items-center justify-center pb-[14%]"
+                  className={
+                    portrait
+                      ? "relative flex h-[46%] flex-col items-center justify-center gap-6 px-10 pb-2 pt-[14%] text-center leading-none"
+                      : "relative flex h-[58%] flex-col items-center justify-center px-[20%] pb-[15%] pt-[6%] leading-none"
+                  }
                 >
-                  <span className="font-script text-[clamp(2rem,7.4vw,3.6rem)] leading-[1.1] text-ink">
-                    {site.couple.him}
-                  </span>
-                  <span className="-my-[0.15em] font-serif text-[clamp(0.95rem,2.8vw,1.45rem)] italic leading-none text-gold-deep">
-                    &amp;
-                  </span>
-                  <span className="font-script text-[clamp(2rem,7.4vw,3.6rem)] leading-[1.1] text-ink">
-                    {site.couple.her}
+                  <span className="flex flex-col items-center leading-none">
+                    {names}
                   </span>
                 </div>
               </div>
 
-              {/* Lacre — el centrado vive en el envoltorio para que GSAP
-                  pueda animar el botón sin pisar los translate de Tailwind. */}
+              {seal}
+
+              {/* Rótulo superior. Sin `translate` de Tailwind: GSAP anima estos
+                  nodos y hornearía el desplazamiento en su matriz. */}
               <div
-                className="absolute left-1/2 z-40 -translate-x-1/2 -translate-y-1/2"
-                style={{ top: `${TIP}%` }}
+                ref={eyebrowRef}
+                className={
+                  portrait
+                    ? "absolute inset-x-0 top-[6%] z-[31] flex items-center justify-center gap-3 text-[11px] font-medium uppercase tracking-[0.36em] text-bronze"
+                    : "absolute inset-x-0 -top-14 flex items-center justify-center gap-4 whitespace-nowrap text-[12px] font-medium uppercase tracking-[0.4em] text-bronze"
+                }
               >
-                <button
-                  ref={sealRef}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    open();
-                  }}
-                  aria-label={site.gate.hint}
-                  className="block rounded-full"
-                >
-                  <Image
-                    src="/images/sello-circular-dorado-transparente.png"
-                    alt=""
-                    width={220}
-                    height={220}
-                    priority
-                    className="size-[clamp(4.4rem,16vw,6.5rem)] cursor-pointer drop-shadow-[0_10px_20px_rgba(27,27,27,0.32)] transition-transform duration-500 ease-out-expo hover:scale-[1.07] active:scale-95"
-                  />
-                </button>
+                <span aria-hidden className="h-px w-6 bg-gold/70 md:w-8" />
+                {site.gate.eyebrow}
+                <span aria-hidden className="h-px w-6 bg-gold/70 md:w-8" />
               </div>
 
-              {/* Rótulo superior */}
-              <p
-                ref={eyebrowRef}
-                className="absolute -top-14 left-1/2 flex -translate-x-1/2 items-center gap-4 whitespace-nowrap text-[12px] font-medium uppercase tracking-[0.4em] text-bronze"
-              >
-                <span aria-hidden className="h-px w-8 bg-gold/70" />
-                {site.gate.eyebrow}
-                <span aria-hidden className="h-px w-8 bg-gold/70" />
-              </p>
-
-              {/* Invitación a abrir — justo debajo del lacre */}
+              {/* Invitación a abrir */}
               <div
                 ref={hintRef}
-                className="absolute -bottom-24 left-1/2 flex -translate-x-1/2 flex-col items-center gap-3"
+                className={
+                  portrait
+                    ? "absolute inset-x-0 bottom-[6%] z-[31] flex flex-col items-center gap-3"
+                    : "absolute inset-x-0 -bottom-24 flex flex-col items-center gap-3"
+                }
               >
                 <p className="whitespace-nowrap text-center text-[13px] font-medium uppercase tracking-[0.32em] text-bronze md:text-[14px]">
                   {site.gate.hint}

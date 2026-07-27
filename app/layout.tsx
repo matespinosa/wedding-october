@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter, Parisienne } from "next/font/google";
+import { Alex_Brush, Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
 
@@ -17,11 +17,11 @@ const inter = Inter({
   display: "swap",
 });
 
-/** Caligrafía para los nombres del sobre. */
-const parisienne = Parisienne({
+/** Cursiva pronunciada para los nombres del sobre. */
+const alexBrush = Alex_Brush({
   subsets: ["latin"],
   weight: "400",
-  variable: "--font-parisienne",
+  variable: "--font-alex-brush",
   display: "swap",
 });
 
@@ -53,7 +53,7 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${cormorant.variable} ${inter.variable} ${parisienne.variable}`}
+      className={`${cormorant.variable} ${inter.variable} ${alexBrush.variable}`}
     >
       <body suppressHydrationWarning>
         <AppShell>{children}</AppShell>

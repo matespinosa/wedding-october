@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { FloralBranch } from "@/components/ui/Florals";
 import { GuestCombobox } from "@/components/ui/GuestCombobox";
 import { Reveal } from "@/components/ui/Reveal";
+import { SectionDivider } from "@/components/ui/SectionDivider";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { RSVP_DEADLINE, RSVP_ENDPOINT, site } from "@/lib/content";
 import { isConfirmed, isOnList, loadGuestData, markConfirmed } from "@/lib/guests";
@@ -203,31 +204,27 @@ export function Rsvp() {
   };
 
   return (
-    <section id="rsvp" className="relative overflow-hidden bg-cream py-28 md:py-40">
+    <section id="rsvp" className="relative overflow-hidden bg-cream">
       {/* Ambiente detrás del vidrio */}
-      <div aria-hidden className="absolute inset-0">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="animate-drift absolute right-[-10%] top-[-6%] size-[34rem] rounded-full bg-gold/[0.14] blur-3xl" />
         <div className="animate-drift-slow absolute bottom-[-12%] left-[-8%] size-[38rem] rounded-full bg-sand/60 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl gap-14 px-5 md:px-8 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
+      {/* Ola superior: el cream del RSVP asoma (no un blanco aparte) */}
+      <SectionDivider bg="bg-transparent" fill="fill-ink" flip className="relative z-[1] -mt-px" />
+
+      <div className="relative z-[1] mx-auto grid max-w-6xl gap-14 px-5 pb-28 pt-28 md:px-8 md:pb-40 md:pt-40 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
         {/* Columna editorial */}
         <div className="lg:pt-8">
           <SectionHeading
             align="left"
             eyebrow={site.rsvp.eyebrow}
             title={site.rsvp.title}
-            description={site.rsvp.intro}
           />
 
           <Reveal delay={0.3} y={18}>
-            <p className="mt-6 inline-block rounded-full border border-gold/40 bg-gold/[0.08] px-5 py-2.5 text-[13px] font-medium uppercase tracking-[0.16em] text-bronze">
-              Por favor confírmanos antes del {RSVP_DEADLINE}
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.4} y={18}>
-            <ul className="mt-10 space-y-4 text-[18px] text-ink/70">
+            <ul className="mt-8 space-y-4 text-[18px] text-ink/70">
               <li className="flex items-center gap-3">
                 <CalendarHeart size={20} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
                 {site.date.long}
@@ -242,6 +239,12 @@ export function Rsvp() {
                 {site.date.city}
               </li>
             </ul>
+          </Reveal>
+
+          <Reveal delay={0.4} y={18}>
+            <p className="mt-8 inline-block rounded-[16px] border border-gold/40 bg-gold/[0.08] px-5 py-2.5 text-[18px] font-medium tracking-normal text-bronze normal-case">
+              Por favor confírmanos antes del {RSVP_DEADLINE}
+            </p>
           </Reveal>
 
           <FloralBranch
@@ -294,7 +297,7 @@ export function Rsvp() {
                                   type="button"
                                   aria-label="Quitar persona"
                                   onClick={() => removeEntry(entry.id)}
-                                  className="flex size-11 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink/50 transition-colors duration-300 hover:border-ink/40 hover:text-ink"
+                                  className="flex size-[3.25rem] shrink-0 items-center justify-center rounded-full border border-gold/50 bg-white/20 text-ink/50 backdrop-blur-sm transition-colors duration-300 hover:border-gold/75 hover:bg-white/30 hover:text-ink"
                                 >
                                   <X size={15} />
                                 </button>
@@ -337,7 +340,7 @@ export function Rsvp() {
                       inputMode="tel"
                       autoComplete="tel"
                       placeholder="+57 300 000 0000"
-                      className="w-full border-b border-ink/15 bg-transparent pb-3 pt-2 text-[18px] text-ink outline-none transition-colors duration-500 placeholder:text-ink/35 focus:border-gold-deep"
+                      className="w-full rounded-full border border-gold/50 bg-white/20 px-5 py-3.5 text-[18px] text-ink outline-none backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/40 hover:border-gold/75 hover:bg-white/30 focus:border-bronze focus:bg-white/35 focus:ring-2 focus:ring-gold/30"
                       value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                     />
@@ -345,7 +348,7 @@ export function Rsvp() {
 
                   {/* Asistencia */}
                   <fieldset>
-                    <legend className="mb-3 text-[12px] font-medium uppercase tracking-[0.22em] text-bronze">
+                    <legend className="mb-3 text-[15px] font-medium tracking-normal text-bronze normal-case">
                       Confirmar asistencia
                     </legend>
                     <div className="grid grid-cols-2 gap-3">
@@ -364,7 +367,7 @@ export function Rsvp() {
                             onChange={() => setAsistencia(option.value)}
                             className="peer sr-only"
                           />
-                          <span className="flex items-center justify-center rounded-full border border-ink/15 px-4 py-4 text-center text-[16px] text-ink/75 transition-all duration-500 hover:border-ink/40 peer-checked:border-ink peer-checked:bg-ink peer-checked:text-cream peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold">
+                          <span className="flex items-center justify-center rounded-full border border-gold/50 bg-white/20 px-4 py-4 text-center text-[16px] text-ink/75 backdrop-blur-sm transition-all duration-500 hover:border-gold/75 hover:bg-white/30 peer-checked:border-bronze peer-checked:bg-bronze peer-checked:text-cream peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold">
                             {option.label}
                           </span>
                         </label>
@@ -420,6 +423,9 @@ export function Rsvp() {
           </div>
         </Reveal>
       </div>
+
+      {/* La ola nace del cream del RSVP para empalmar con Closing sin franja blanca */}
+      <SectionDivider bg="bg-transparent" fill="fill-ink" />
     </section>
   );
 }

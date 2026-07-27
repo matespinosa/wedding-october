@@ -27,6 +27,8 @@ export const site = {
     display: "Sábado · 3 de octubre · 2026",
     long: "Sábado, 3 de octubre de 2026",
     short: "03 . 10 . 2026",
+    /** Una sola línea, para el sobre en vertical. */
+    plain: "3 de octubre de 2026",
     badge: "Mateo & Julieth · 03 · 10 · 26 · ",
     city: "Bogotá, Colombia",
   },
@@ -46,6 +48,8 @@ export const site = {
     eyebrow: "Una carta para ti",
     hint: "Toca el sello para abrir",
     cardEyebrow: "Nos casamos",
+    /** Línea bajo el lacre en el sobre vertical. */
+    portraitLine: "Te invitan a su boda",
   },
 
   hero: {
@@ -94,9 +98,19 @@ export const site = {
   gallery: {
     quote: "Cada paso nos trajo hasta aquí.",
     photos: [
-      { src: "/images/propose.JPG", alt: "Mateo pidiéndole matrimonio a Julieth, arrodillado frente a la baranda del parque" },
-      { src: "/images/other.jpg", alt: "Mateo y Julieth sentados en la escalinata entre columnas de piedra" },
-      { src: "/images/detalle.jpg", alt: "Julieth ajustando el tacón blanco antes de la ceremonia" },
+      {
+        src: "/images/propose.jpg",
+        alt: "Mateo pidiéndole matrimonio a Julieth, arrodillado frente a la baranda del parque",
+        position: "object-[center_42%]",
+      },
+      {
+        src: "/images/other.jpg",
+        alt: "Mateo y Julieth sentados en la escalinata entre columnas de piedra",
+      },
+      {
+        src: "/images/detalle.jpg",
+        alt: "Julieth ajustando el tacón blanco antes de la ceremonia",
+      },
     ],
   },
 

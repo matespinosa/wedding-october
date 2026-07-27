@@ -149,28 +149,40 @@ export function Navbar() {
             </li>
           </ul>
 
-          {/* Hamburguesa */}
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-controls="menu-movil"
-            aria-label={open ? "Cerrar menú" : "Abrir menú"}
-            className="relative grid size-11 place-items-center md:hidden"
-          >
-            <span
+          {/* Móvil: confirmar + hamburguesa */}
+          <div className="flex items-center gap-2 md:hidden">
+            <a
+              href="#rsvp"
+              onClick={(e) => go(e, "#rsvp")}
               className={cn(
-                "absolute h-px w-6 bg-ink transition-all duration-500 ease-out-expo",
-                open ? "rotate-45" : "-translate-y-[4.5px]",
+                "inline-flex items-center rounded-full border border-ink/20 px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] text-ink transition-opacity duration-300",
+                open && "pointer-events-none opacity-0",
               )}
-            />
-            <span
-              className={cn(
-                "absolute h-px w-6 bg-ink transition-all duration-500 ease-out-expo",
-                open ? "-rotate-45" : "translate-y-[4.5px]",
-              )}
-            />
-          </button>
+            >
+              Confirmar
+            </a>
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-controls="menu-movil"
+              aria-label={open ? "Cerrar menú" : "Abrir menú"}
+              className="relative grid size-11 place-items-center"
+            >
+              <span
+                className={cn(
+                  "absolute h-px w-6 bg-ink transition-all duration-500 ease-out-expo",
+                  open ? "rotate-45" : "-translate-y-[4.5px]",
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute h-px w-6 bg-ink transition-all duration-500 ease-out-expo",
+                  open ? "-rotate-45" : "translate-y-[4.5px]",
+                )}
+              />
+            </button>
+          </div>
         </nav>
       </motion.header>
 
