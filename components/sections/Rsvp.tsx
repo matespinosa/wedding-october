@@ -72,7 +72,7 @@ function SuccessView({
       <h3 className="mt-8 font-serif text-4xl font-light text-ink">
         ¡Gracias, <span className="italic text-gold-deep">{firstName}</span>!
       </h3>
-      <p className="mx-auto mt-4 max-w-sm text-[15px] leading-[1.85] text-ink/60">
+      <p className="mx-auto mt-4 max-w-md text-[18px] leading-[1.75] text-ink/65">
         {attendance === "si"
           ? "Hemos recibido tu confirmación. Nos vemos el 3 de octubre para celebrar juntos. 🥂"
           : site.rsvp.success.no}
@@ -80,7 +80,7 @@ function SuccessView({
       <button
         type="button"
         onClick={onReset}
-        className="mt-8 text-[11px] uppercase tracking-[0.25em] text-bronze underline-offset-4 transition-colors hover:text-ink hover:underline"
+        className="mt-8 text-[13px] uppercase tracking-[0.22em] text-bronze underline-offset-4 transition-colors hover:text-ink hover:underline"
       >
         Enviar otra respuesta
       </button>
@@ -221,24 +221,24 @@ export function Rsvp() {
           />
 
           <Reveal delay={0.3} y={18}>
-            <p className="mt-6 inline-block rounded-full border border-gold/40 bg-gold/[0.08] px-5 py-2 text-[11px] font-medium uppercase tracking-[0.2em] text-bronze">
+            <p className="mt-6 inline-block rounded-full border border-gold/40 bg-gold/[0.08] px-5 py-2.5 text-[13px] font-medium uppercase tracking-[0.16em] text-bronze">
               Por favor confírmanos antes del {RSVP_DEADLINE}
             </p>
           </Reveal>
 
           <Reveal delay={0.4} y={18}>
-            <ul className="mt-10 space-y-4 text-[14px] text-ink/60">
+            <ul className="mt-10 space-y-4 text-[18px] text-ink/70">
               <li className="flex items-center gap-3">
-                <CalendarHeart size={16} strokeWidth={1.75} className="text-gold-deep" />
+                <CalendarHeart size={20} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
                 {site.date.long}
               </li>
               <li className="flex items-center gap-3">
-                <Clock size={16} strokeWidth={1.75} className="text-gold-deep" />
+                <Clock size={20} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
                 Ceremonia {site.venues.ceremony.time} · Celebración{" "}
                 {site.venues.reception.time}
               </li>
               <li className="flex items-center gap-3">
-                <MapPin size={16} strokeWidth={1.75} className="text-gold-deep" />
+                <MapPin size={20} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
                 {site.date.city}
               </li>
             </ul>
@@ -271,7 +271,7 @@ export function Rsvp() {
                 >
                   {/* Nombres — multi-invitado */}
                   <div>
-                    <span className="mb-3 block text-[10px] font-medium uppercase tracking-[0.25em] text-bronze">
+                    <span className="mb-3 block text-[12px] font-medium uppercase tracking-[0.22em] text-bronze">
                       Nombre
                     </span>
                     <div className="space-y-4">
@@ -304,7 +304,7 @@ export function Rsvp() {
                               <p
                                 role="status"
                                 className={cn(
-                                  "mt-2 text-[13px]",
+                                  "mt-2 text-[15px]",
                                   msg.tone === "ok" ? "text-gold-deep" : "text-clay",
                                 )}
                               >
@@ -318,18 +318,18 @@ export function Rsvp() {
                     <button
                       type="button"
                       onClick={addEntry}
-                      className="mt-4 inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.16em] text-bronze underline-offset-4 transition-colors hover:text-ink hover:underline"
+                      className="mt-4 inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.14em] text-bronze underline-offset-4 transition-colors hover:text-ink hover:underline"
                     >
-                      <Plus size={13} strokeWidth={2} /> Agregar otra persona
+                      <Plus size={15} strokeWidth={2} /> Agregar otra persona
                     </button>
-                    <p className="mt-4 text-[13px] leading-relaxed text-ink/50">
+                    <p className="mt-4 text-[16px] leading-relaxed text-ink/55">
                       {site.rsvp.hint}
                     </p>
                   </div>
 
                   {/* Teléfono */}
                   <label className="block">
-                    <span className="mb-3 block text-[10px] font-medium uppercase tracking-[0.25em] text-bronze">
+                    <span className="mb-3 block text-[12px] font-medium uppercase tracking-[0.22em] text-bronze">
                       Teléfono
                     </span>
                     <input
@@ -337,7 +337,7 @@ export function Rsvp() {
                       inputMode="tel"
                       autoComplete="tel"
                       placeholder="+57 300 000 0000"
-                      className="w-full border-b border-ink/15 bg-transparent pb-2.5 pt-2 text-[15px] text-ink outline-none transition-colors duration-500 placeholder:text-ink/35 focus:border-gold-deep"
+                      className="w-full border-b border-ink/15 bg-transparent pb-3 pt-2 text-[18px] text-ink outline-none transition-colors duration-500 placeholder:text-ink/35 focus:border-gold-deep"
                       value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                     />
@@ -345,7 +345,7 @@ export function Rsvp() {
 
                   {/* Asistencia */}
                   <fieldset>
-                    <legend className="mb-3 text-[10px] font-medium uppercase tracking-[0.25em] text-bronze">
+                    <legend className="mb-3 text-[12px] font-medium uppercase tracking-[0.22em] text-bronze">
                       Confirmar asistencia
                     </legend>
                     <div className="grid grid-cols-2 gap-3">
@@ -364,7 +364,7 @@ export function Rsvp() {
                             onChange={() => setAsistencia(option.value)}
                             className="peer sr-only"
                           />
-                          <span className="flex items-center justify-center rounded-full border border-ink/15 px-4 py-3.5 text-center text-[13px] text-ink/70 transition-all duration-500 hover:border-ink/40 peer-checked:border-ink peer-checked:bg-ink peer-checked:text-cream peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold">
+                          <span className="flex items-center justify-center rounded-full border border-ink/15 px-4 py-4 text-center text-[16px] text-ink/75 transition-all duration-500 hover:border-ink/40 peer-checked:border-ink peer-checked:bg-ink peer-checked:text-cream peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold">
                             {option.label}
                           </span>
                         </label>
@@ -376,7 +376,7 @@ export function Rsvp() {
                     type="submit"
                     disabled={status === "sending"}
                     whileTap={{ scale: 0.98 }}
-                    className="group relative w-full overflow-hidden rounded-full bg-ink py-4.5 text-[11px] font-medium uppercase tracking-[0.25em] text-cream transition-opacity duration-300 disabled:cursor-wait disabled:opacity-80"
+                    className="group relative w-full overflow-hidden rounded-full bg-ink py-4.5 text-[13px] font-medium uppercase tracking-[0.22em] text-cream transition-opacity duration-300 disabled:cursor-wait disabled:opacity-80"
                   >
                     <span
                       aria-hidden
@@ -408,7 +408,7 @@ export function Rsvp() {
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="text-center text-[13px] text-clay"
+                        className="text-center text-[15px] text-clay"
                       >
                         {note.text}
                       </motion.p>

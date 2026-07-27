@@ -58,7 +58,7 @@ function VenueCard({
           aria-hidden
           className="absolute inset-0 bg-gradient-to-t from-ink/45 via-ink/5 to-transparent"
         />
-        <span className="absolute bottom-4 left-5 text-[10px] font-medium uppercase tracking-[0.32em] text-cream/90">
+        <span className="absolute bottom-4 left-5 text-[12px] font-medium uppercase tracking-[0.28em] text-cream/90">
           {venue.kind}
         </span>
       </ParallaxImage>
@@ -70,17 +70,17 @@ function VenueCard({
           {icon}
         </span>
 
-        <h3 className="mt-6 font-serif text-[1.7rem] font-light leading-tight text-ink">
+        <h3 className="mt-6 font-serif text-[1.95rem] font-light leading-tight text-ink md:text-[2.2rem]">
           {venue.name}
         </h3>
 
-        <div className="mt-5 space-y-2.5 text-[14px] leading-relaxed text-ink/60">
-          <p className="flex items-center gap-2.5">
-            <MapPin size={15} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
+        <div className="mt-5 space-y-3 text-[18px] leading-relaxed text-ink/70">
+          <p className="flex items-center gap-3">
+            <MapPin size={19} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
             {venue.address} · {venue.city}
           </p>
-          <p className="flex items-center gap-2.5">
-            <Clock size={15} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
+          <p className="flex items-center gap-3">
+            <Clock size={19} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
             {venue.time}
           </p>
         </div>
@@ -138,7 +138,7 @@ export function Venues() {
         </div>
 
         <Reveal delay={0.15} y={18}>
-          <p className="mt-6 text-center font-serif text-2xl font-light italic text-ink/75 md:text-3xl">
+          <p className="mt-6 text-center font-serif text-[1.9rem] font-light italic text-ink/80 md:text-4xl">
             {site.date.long}
           </p>
         </Reveal>

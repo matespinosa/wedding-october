@@ -33,16 +33,17 @@ export function Navbar() {
   });
   useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 48));
 
-  // Bloquea el scroll mientras el menú móvil está abierto
+  // Bloquea el scroll mientras el menú móvil está abierto.
+  // Solo actúa cuando el menú está abierto: si no, pisaría el bloqueo
+  // que mantiene el sobre de entrada hasta que la carta se abre.
   useEffect(() => {
-    if (open) {
-      stop();
-      document.documentElement.classList.add("overflow-hidden");
-    } else {
+    if (!open) return;
+    stop();
+    document.documentElement.classList.add("overflow-hidden");
+    return () => {
       start();
       document.documentElement.classList.remove("overflow-hidden");
-    }
-    return () => document.documentElement.classList.remove("overflow-hidden");
+    };
   }, [open, stop, start]);
 
   useEffect(() => {
@@ -115,7 +116,7 @@ export function Navbar() {
                     href={link.href}
                     onClick={(e) => go(e, link.href)}
                     className={cn(
-                      "relative py-2 text-[13px] tracking-[0.08em] transition-colors duration-300",
+                      "relative py-2 text-[15px] tracking-[0.06em] transition-colors duration-300",
                       isActive ? "text-ink" : "text-ink/50 hover:text-ink",
                     )}
                   >
@@ -135,7 +136,7 @@ export function Navbar() {
               <a
                 href="#rsvp"
                 onClick={(e) => go(e, "#rsvp")}
-                className="group relative inline-flex items-center overflow-hidden rounded-full border border-ink/20 px-5 py-2.5 text-[10px] uppercase tracking-[0.22em] text-ink transition-colors duration-500 hover:border-ink"
+                className="group relative inline-flex items-center overflow-hidden rounded-full border border-ink/20 px-5 py-2.5 text-[12px] uppercase tracking-[0.18em] text-ink transition-colors duration-500 hover:border-ink"
               >
                 <span
                   aria-hidden
@@ -190,7 +191,9 @@ export function Navbar() {
             <RoseBloom className="pointer-events-none absolute -bottom-16 -right-16 h-80 rotate-[15deg] text-gold/15" />
             <nav aria-label="Menú móvil">
               <ul className="flex flex-col gap-2">
-                {site.nav.map((link, i) => (
+                {site.nav
+                  .filter((link) => link.href !== "#historia")
+                  .map((link, i) => (
                   <li key={link.href} className="overflow-hidden">
                     <motion.div
                       initial={{ y: 56, opacity: 0 }}
@@ -207,10 +210,10 @@ export function Navbar() {
                         onClick={(e) => go(e, link.href)}
                         className="group flex items-baseline gap-4 py-3"
                       >
-                        <span className="text-[11px] tracking-[0.3em] text-bronze">
+                        <span className="text-[13px] tracking-[0.26em] text-bronze">
                           0{i + 1}
                         </span>
-                        <span className="font-serif text-5xl font-light text-ink transition-colors duration-300 group-active:text-gold-deep">
+                        <span className="font-serif text-[3.4rem] font-light text-ink transition-colors duration-300 group-active:text-gold-deep">
                           {link.label}
                         </span>
                       </a>
@@ -227,10 +230,10 @@ export function Navbar() {
               transition={{ duration: 0.7, delay: 0.55 }}
               className="relative flex flex-col gap-2.5"
             >
-              <p className="font-serif text-xl italic text-ink/70">
+              <p className="font-serif text-2xl italic text-ink/70">
                 {site.couple.full}
               </p>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-ink/40">
+              <p className="text-[12px] uppercase tracking-[0.22em] text-ink/50">
                 {site.date.short} · {site.date.city}
               </p>
             </motion.div>

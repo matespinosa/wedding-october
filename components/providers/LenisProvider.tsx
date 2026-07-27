@@ -16,8 +16,10 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
+type ScrollOpts = { offset?: number; immediate?: boolean };
+
 type LenisApi = {
-  scrollTo: (target: string | number, opts?: { offset?: number }) => void;
+  scrollTo: (target: string | number, opts?: ScrollOpts) => void;
   stop: () => void;
   start: () => void;
 };
@@ -64,11 +66,15 @@ export function LenisProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const scrollTo = useCallback(
-    (target: string | number, opts?: { offset?: number }) => {
+    (target: string | number, opts?: ScrollOpts) => {
       const offset = opts?.offset ?? -64;
       const lenis = lenisRef.current;
       if (lenis) {
-        lenis.scrollTo(target, { offset, duration: 1.6 });
+        if (opts?.immediate) {
+          lenis.scrollTo(target, { offset, immediate: true, force: true });
+        } else {
+          lenis.scrollTo(target, { offset, duration: 1.6 });
+        }
       } else if (typeof target === "string") {
         document.querySelector(target)?.scrollIntoView();
       } else {

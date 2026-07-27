@@ -72,10 +72,10 @@ export function Closing() {
 
       <div className="relative mx-auto flex max-w-4xl flex-col items-center px-6 text-center">
         <Reveal blur={false} y={16}>
-          <p className="font-serif text-base italic text-cream/50 md:text-lg">
+          <p className="font-serif text-xl italic text-cream/60 md:text-2xl">
             {site.closing.verse}
           </p>
-          <p className="mt-3 text-[10px] uppercase tracking-[0.35em] text-gold/80">
+          <p className="mt-3 text-[12px] uppercase tracking-[0.3em] text-gold/80">
             {site.closing.verseRef}
           </p>
         </Reveal>
@@ -90,7 +90,7 @@ export function Closing() {
         />
 
         <Reveal delay={0.35} y={20}>
-          <p className="mt-14 text-[11px] uppercase tracking-[0.35em] text-cream/45">
+          <p className="mt-14 text-[13px] uppercase tracking-[0.3em] text-cream/55">
             {site.closing.farewell}
           </p>
         </Reveal>
@@ -112,7 +112,7 @@ export function Closing() {
         />
 
         <Reveal delay={0.55} y={16}>
-          <p className="mt-10 text-[11px] uppercase tracking-[0.3em] text-gold/70">
+          <p className="mt-10 text-[13px] uppercase tracking-[0.26em] text-gold/70">
             {site.closing.tagline}
           </p>
         </Reveal>

@@ -93,7 +93,7 @@ export function GuestCombobox({
         autoFocus={autoFocus}
         placeholder="Busca o escribe el nombre"
         className={cn(
-          "w-full border-b border-ink/15 bg-transparent pb-2.5 pt-2 text-[15px] text-ink outline-none transition-colors duration-500 placeholder:text-ink/35 focus:border-gold-deep",
+          "w-full border-b border-ink/15 bg-transparent pb-3 pt-2 text-[18px] text-ink outline-none transition-colors duration-500 placeholder:text-ink/35 focus:border-gold-deep",
           className,
         )}
         value={value}
@@ -123,7 +123,7 @@ export function GuestCombobox({
               role="option"
               aria-selected={i === activeIndex}
               className={cn(
-                "cursor-pointer rounded-xl px-3.5 py-2.5 text-[14px] text-ink/80 transition-colors duration-200",
+                "cursor-pointer rounded-xl px-3.5 py-3 text-[17px] text-ink/80 transition-colors duration-200",
                 i === activeIndex ? "bg-gold/15 text-ink" : "hover:bg-gold/10",
               )}
               onMouseDown={(e) => {

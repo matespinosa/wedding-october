@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Cormorant_Garamond, Inter, Parisienne } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
 
@@ -14,6 +14,14 @@ const cormorant = Cormorant_Garamond({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+/** Caligrafía para los nombres del sobre. */
+const parisienne = Parisienne({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-parisienne",
   display: "swap",
 });
 
@@ -45,7 +53,7 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${cormorant.variable} ${inter.variable}`}
+      className={`${cormorant.variable} ${inter.variable} ${parisienne.variable}`}
     >
       <body suppressHydrationWarning>
         <AppShell>{children}</AppShell>

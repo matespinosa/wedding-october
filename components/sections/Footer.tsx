@@ -23,7 +23,7 @@ export function Footer() {
           M<span className="italic text-gold">&amp;</span>J
         </a>
 
-        <p className="text-center text-[10px] uppercase tracking-[0.3em] text-cream/40">
+        <p className="text-center text-[12px] uppercase tracking-[0.26em] text-cream/50">
           Hecho a mano, con amor · {site.date.short}
         </p>
 

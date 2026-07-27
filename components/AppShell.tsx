@@ -4,7 +4,7 @@ import { MotionConfig } from "framer-motion";
 import { useState, type ReactNode } from "react";
 import { LenisProvider } from "@/components/providers/LenisProvider";
 import { LoadContext } from "@/components/providers/load-context";
-import { Preloader } from "@/components/layout/Preloader";
+import { EnvelopeGate } from "@/components/sections/EnvelopeGate";
 import { Navbar } from "@/components/layout/Navbar";
 import { GrainOverlay } from "@/components/ui/GrainOverlay";
 
@@ -15,10 +15,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion="user">
       <LenisProvider>
         <LoadContext.Provider value={ready}>
-          <Preloader onDone={() => setReady(true)} />
           <GrainOverlay />
-          <Navbar />
-          {children}
+          {/* Navbar y contenido viven dentro del sobre: es el sitio real
+              el que sale de la carta, no una maqueta. */}
+          <EnvelopeGate onOpen={() => setReady(true)}>
+            <Navbar />
+            {children}
+          </EnvelopeGate>
         </LoadContext.Provider>
       </LenisProvider>
     </MotionConfig>

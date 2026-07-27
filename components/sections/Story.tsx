@@ -39,15 +39,15 @@ function Moment({ moment, index }: { moment: MomentData; index: number }) {
         )}
       >
         <Reveal delay={0.1}>
-          <span className="text-[11px] font-medium uppercase tracking-[0.35em] text-bronze">
+          <span className="text-[12px] font-medium uppercase tracking-[0.32em] text-bronze">
             Capítulo · 0{index + 1}
           </span>
-          <h3 className="mt-4 font-serif text-3xl font-light text-balance text-ink md:text-4xl">
+          <h3 className="mt-4 font-serif text-[2.1rem] font-light text-balance text-ink md:text-[2.75rem]">
             {moment.title}
           </h3>
           <p
             className={cn(
-              "mt-4 max-w-md text-[15px] leading-[1.85] text-ink/60",
+              "mt-4 max-w-md text-[18px] leading-[1.75] text-ink/65 md:text-[19px]",
               even && "md:ml-auto",
             )}
           >
@@ -80,7 +80,7 @@ export function Story() {
   return (
     <section
       id="historia"
-      className="relative overflow-hidden bg-cream py-28 md:py-40"
+      className="relative hidden overflow-hidden bg-cream py-28 md:block md:py-40"
     >
       <FloralBranch className="pointer-events-none absolute -right-16 top-24 h-96 rotate-[24deg] text-gold/[0.1]" />
 
@@ -91,9 +91,9 @@ export function Story() {
         />
 
         <Reveal delay={0.3} y={18}>
-          <p className="mx-auto mt-8 max-w-xl text-center font-serif text-lg italic leading-relaxed text-ink/55 md:text-xl">
+          <p className="mx-auto mt-8 max-w-xl text-center font-serif text-xl italic leading-relaxed text-ink/60 md:text-2xl">
             {site.story.verse}
-            <span className="mt-3 block text-[11px] not-italic uppercase tracking-[0.3em] text-bronze">
+            <span className="mt-3 block text-[12px] not-italic uppercase tracking-[0.28em] text-bronze">
               {site.story.verseRef}
             </span>
           </p>
