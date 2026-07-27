@@ -27,6 +27,8 @@ export const site = {
     display: "Sábado · 3 de octubre · 2026",
     long: "Sábado, 3 de octubre de 2026",
     short: "03 . 10 . 2026",
+    /** Una sola línea, para el sobre en vertical. */
+    plain: "3 de octubre de 2026",
     badge: "Mateo & Julieth · 03 · 10 · 26 · ",
     city: "Bogotá, Colombia",
   },
@@ -38,6 +40,17 @@ export const site = {
     { label: "Dress code", href: "#dress-code" },
     { label: "RSVP", href: "#rsvp" },
   ],
+
+  /** Sobre lacrado que abre el sitio. */
+  gate: {
+    /* Alternativas si quieres otro tono: "Nuestra invitación",
+       "Con todo nuestro amor", "03 · 10 · 2026", "Para ti". */
+    eyebrow: "Una carta para ti",
+    hint: "Toca el sello para abrir",
+    cardEyebrow: "Nos casamos",
+    /** Línea bajo el lacre en el sobre vertical. */
+    portraitLine: "Te invitan a su boda",
+  },
 
   hero: {
     eyebrow: "Nos casamos",
@@ -61,22 +74,22 @@ export const site = {
     moments: [
       {
         title: "El encuentro",
-        text: "Hace casi cuatro años y medio, Dios cruzó nuestros caminos. Lo que parecía casualidad era el comienzo de todo.",
+        text: "Hace cuatro años y medio, Dios cruzó nuestros caminos.",
         word: "Encuentro",
       },
       {
         title: "Mejores amigos",
-        text: "Una amistad de conversaciones interminables se volvió confianza, apoyo y refugio en cada momento importante.",
+        text: "La amistad se volvió confianza, apoyo y refugio.",
         word: "Amistad",
       },
       {
         title: "El amor esperó",
-        text: "Aunque el amor siempre estuvo, esperó con paciencia el momento perfecto para florecer.",
+        text: "El amor siempre estuvo. Solo esperó su momento para florecer.",
         word: "Amor",
       },
       {
         title: "El tiempo perfecto",
-        text: "Hoy celebramos ese amor y el comienzo de una nueva etapa. En el momento indicado, Dios hizo que todo sucediera.",
+        text: "Hoy celebramos ese amor y el comienzo de una nueva etapa.",
         word: "Siempre",
       },
     ],
@@ -85,17 +98,26 @@ export const site = {
   gallery: {
     quote: "Cada paso nos trajo hasta aquí.",
     photos: [
-      { src: "/images/propose.JPG", alt: "Mateo pidiéndole matrimonio a Julieth, arrodillado frente a la baranda del parque" },
-      { src: "/images/other.jpg", alt: "Mateo y Julieth sentados en la escalinata entre columnas de piedra" },
-      { src: "/images/detalle.jpg", alt: "Julieth ajustando el tacón blanco antes de la ceremonia" },
+      {
+        src: "/images/propose.jpg",
+        alt: "Mateo pidiéndole matrimonio a Julieth, arrodillado frente a la baranda del parque",
+        position: "object-[center_42%]",
+      },
+      {
+        src: "/images/other.jpg",
+        alt: "Mateo y Julieth sentados en la escalinata entre columnas de piedra",
+      },
+      {
+        src: "/images/detalle.jpg",
+        alt: "Julieth ajustando el tacón blanco antes de la ceremonia",
+      },
     ],
   },
 
   venues: {
     eyebrow: "El gran día",
     title: "Ceremonia & Celebración",
-    intro:
-      "Dos momentos, un mismo día inolvidable. Te esperamos para celebrar juntos.",
+    intro: "Dos momentos, un mismo día. Te esperamos.",
     ceremony: {
       kind: "Ceremonia religiosa",
       name: "Iglesia de Dios Ministerial de Jesucristo Internacional",
@@ -141,8 +163,7 @@ export const site = {
   dresscode: {
     eyebrow: "Dress code",
     title: "Etiqueta formal",
-    intro:
-      "Queremos que esa noche todos nos veamos y nos sintamos espectaculares.",
+    intro: "Queremos vernos y sentirnos espectaculares esa noche.",
     men: {
       label: "Ellos",
       garment: "Traje y corbata",
@@ -161,9 +182,8 @@ export const site = {
   rsvp: {
     eyebrow: "Confirma tu asistencia",
     title: "¿Nos acompañas?",
-    intro:
-      "Tu presencia es nuestro mejor regalo. Ayúdanos a preparar cada detalle confirmando tu asistencia.",
-    hint: "Solo las personas registradas en la lista de invitados podrán asistir. Si no encuentras tu nombre, escríbenos.",
+    intro: "Tu presencia es nuestro mejor regalo. Confírmanos tu asistencia.",
+    hint: "Solo quienes están en la lista de invitados podrán asistir. Si no encuentras tu nombre, escríbenos.",
     success: {
       no: "Gracias por avisarnos. Te vamos a extrañar, pero sabemos que estarás con nosotros de corazón.",
     },

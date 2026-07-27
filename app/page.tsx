@@ -15,15 +15,13 @@ export default function Home() {
       <Hero />
       <Countdown />
       <Story />
-      <SectionDivider bg="bg-cream" fill="text-ink" />
+      <SectionDivider bg="bg-cream" fill="fill-ink" />
       <Gallery />
-      <SectionDivider bg="bg-ink" fill="text-shell" />
+      <SectionDivider bg="bg-ink" fill="fill-shell" />
       <Venues />
-      <SectionDivider bg="bg-shell" fill="text-ink" />
+      <SectionDivider bg="bg-shell" fill="fill-ink" />
       <DressCode />
-      <SectionDivider bg="bg-ink" fill="text-cream" />
       <Rsvp />
-      <SectionDivider bg="bg-cream" fill="text-ink" />
       <Closing />
       <Footer />
     </main>

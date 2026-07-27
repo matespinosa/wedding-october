@@ -24,10 +24,10 @@ function Frame({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 60, filter: "blur(10px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{ duration: 1.1, ease: EASE_OUT, delay: index * 0.12 }}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15, margin: "0px 0px -40px 0px" }}
+      transition={{ duration: 0.9, ease: EASE_OUT, delay: index * 0.12 }}
       className={cn(
         "group relative overflow-hidden rounded-[26px] border border-cream/10",
         className,
@@ -40,7 +40,10 @@ function Frame({
         priority={priority}
         amount={54}
         className="h-full w-full"
-        imgClassName="transition-transform duration-[1600ms] ease-out-expo group-hover:scale-105"
+        imgClassName={cn(
+          "transition-transform duration-[1600ms] ease-out-expo group-hover:scale-105",
+          "position" in photo ? photo.position : undefined,
+        )}
       >
         <span
           aria-hidden

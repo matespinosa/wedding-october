@@ -37,7 +37,7 @@ function Unit({ value, label }: { value: number; label: string }) {
           {display}
         </span>
       </div>
-      <span className="mt-3 text-[10px] uppercase tracking-[0.3em] text-bronze">
+      <span className="mt-3 text-[12px] uppercase tracking-[0.26em] text-bronze">
         {label}
       </span>
     </div>
@@ -57,7 +57,7 @@ export function Countdown() {
 
       <div className="relative mx-auto max-w-4xl px-5 text-center md:px-8">
         <Reveal blur={false} y={16}>
-          <p className="flex items-center justify-center gap-4 text-[11px] font-medium uppercase tracking-[0.38em] text-bronze">
+          <p className="flex items-center justify-center gap-4 text-[12px] font-medium uppercase tracking-[0.34em] text-bronze">
             <span aria-hidden className="h-px w-10 bg-gold/70" />
             {site.countdown.eyebrow}
             <span aria-hidden className="h-px w-10 bg-gold/70" />
@@ -113,7 +113,7 @@ export function Countdown() {
         </div>
 
         <Reveal delay={0.15}>
-          <p className="mt-10 text-[11px] uppercase tracking-[0.34em] text-ink/45">
+          <p className="mt-10 text-[13px] uppercase tracking-[0.3em] text-ink/55">
             {site.countdown.subtitle}
           </p>
         </Reveal>

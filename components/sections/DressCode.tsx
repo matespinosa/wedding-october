@@ -95,14 +95,14 @@ function CodeColumn({
       <FashionPlate paths={paths} label={`Ilustración: ${group.garment}`} />
 
       <Reveal delay={delay} y={24}>
-        <p className="mt-10 text-[11px] font-medium uppercase tracking-[0.4em] text-gold">
+        <p className="mt-10 text-[12px] font-medium uppercase tracking-[0.36em] text-gold">
           {group.label}
         </p>
-        <h3 className="mt-3 font-serif text-3xl font-light italic text-cream md:text-4xl">
+        <h3 className="mt-3 font-serif text-[2.2rem] font-light italic text-cream md:text-[2.9rem]">
           {group.garment}
         </h3>
         {group.notes.length > 0 && (
-          <ul className="mt-5 space-y-1.5 text-[14px] leading-relaxed text-cream/55">
+          <ul className="mt-5 space-y-1.5 text-[18px] leading-relaxed text-cream/65">
             {group.notes.map((note) => (
               <li key={note}>{note}</li>
             ))}
@@ -139,7 +139,7 @@ export function DressCode() {
         </div>
 
         <Reveal delay={0.2} y={18}>
-          <p className="mx-auto mt-20 flex max-w-md items-center justify-center gap-4 text-center font-serif text-lg italic text-cream/70">
+          <p className="mx-auto mt-20 flex max-w-lg items-center justify-center gap-4 text-center font-serif text-xl italic text-cream/75 md:text-2xl">
             <span aria-hidden className="h-px w-8 shrink-0 bg-gold/40" />
             {site.dresscode.note}
             <span aria-hidden className="h-px w-8 shrink-0 bg-gold/40" />

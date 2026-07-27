@@ -41,8 +41,8 @@ const variants: Record<Variant, { root: string; fill: string }> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: "px-5 py-2.5 text-[10px]",
-  md: "px-8 py-4 text-[11px]",
+  sm: "px-6 py-3 text-[12px]",
+  md: "px-8 py-4 text-[13px]",
 };
 
 /**

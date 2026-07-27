@@ -124,7 +124,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={ready ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.35 }}
-          className="mb-5 flex items-center gap-4 text-[11px] font-medium uppercase tracking-[0.42em] text-bronze"
+          className="mb-5 flex items-center gap-4 text-[12px] font-medium uppercase tracking-[0.38em] text-bronze"
         >
           <span aria-hidden className="h-px w-10 bg-gold/70" />
           {site.hero.eyebrow}
@@ -237,7 +237,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={ready ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.9, ease: EASE_OUT, delay: 1.55 }}
-          className="mt-7 text-[10px] font-medium uppercase tracking-[0.28em] text-ink/60 md:text-xs md:tracking-[0.34em]"
+          className="mt-7 text-[13px] font-medium uppercase tracking-[0.26em] text-ink/70 md:text-sm md:tracking-[0.3em]"
         >
           {site.date.display}
         </motion.p>
@@ -246,7 +246,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 18 }}
           animate={ready ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.9, ease: EASE_OUT, delay: 1.75 }}
-          className="mt-6"
+          className="mt-6 hidden md:block"
         >
           <Button
             href="#historia"
