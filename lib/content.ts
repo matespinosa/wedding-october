@@ -252,7 +252,6 @@ export const site = {
   closing: {
     verse: "«Y sobre todas estas cosas, vestíos de amor, que es el vínculo perfecto.»",
     verseRef: "Colosenses 3:14",
-    quote: "No podemos esperar para celebrar este día tan especial contigo.",
     farewell: "Con todo nuestro amor,",
     tagline: "Con amor · 2026",
     image: "/images/cierre.jpg",
