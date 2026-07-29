@@ -17,9 +17,9 @@ npm start         # servir el build
 
 ## Editar el contenido
 
-**Todo el contenido vive en [`lib/content.ts`](lib/content.ts)** — nombres, fecha, textos de la historia, galería, lugares, horas, paletas del dress code, endpoint del RSVP y lista de invitados de respaldo. No hace falta tocar componentes.
+**Todo el contenido editorial vive en [`lib/content.ts`](lib/content.ts)** — nombres, fecha, textos de la historia, galería, lugares, horas y paletas del dress code. No hace falta tocar componentes.
 
-Datos reales ya cargados: boda de Mateo & Julieth · sábado 3 de octubre de 2026 · Bogotá. Ceremonia en la Iglesia de Dios Ministerial de Jesucristo Internacional (sede La Colina, 11:00 a. m.) y celebración en el Retiro San Juan · Salón Magnolia (Vía La Calera, 5:00 p. m.).
+Datos reales ya cargados: boda de Mateo & Julieth · sábado 3 de octubre de 2026 · Bogotá. Ceremonia en la Iglesia de Dios Ministerial de Jesucristo Internacional (sede La Colina, 11:00 a. m.) y celebración en el Retiro San Juan · Salón Magnolia (Vía Arrayanes, 5:00 p. m.).
 
 ## Fotos
 
@@ -27,12 +27,13 @@ Las fotos reales viven en [`public/images/`](public/images) y se muestran en el 
 
 ## RSVP → Google Sheets
 
-El formulario replica la integración de Google Apps Script:
+El formulario usa una búsqueda privada por coincidencia exacta:
 
-- **Lista de invitados:** al cargar, [`lib/guests.ts`](lib/guests.ts) llama `loadGuestData(RSVP_ENDPOINT)` que trae los invitados y quiénes ya confirmaron desde la hoja (vía `doGet`). Si no hay conexión, usa `FALLBACK_GUESTS` en [`lib/content.ts`](lib/content.ts).
-- **Envío:** cada confirmación se envía con `fetch` (`mode: 'no-cors'`, `Content-Type: text/plain`) directo al `RSVP_ENDPOINT`, y se guarda un respaldo en `localStorage['rsvp']`. Como `no-cors` no deja leer la respuesta, el éxito es optimista (igual que el proyecto original).
-- **Multi-invitado:** un envío puede traer varias personas ("+ Agregar otra persona"); la hoja recibe una fila por persona.
-- **Hoja nueva:** despliega [`google-apps-script.gs`](google-apps-script.gs) (Extensiones → Apps Script), corre `prepararEncabezados` una vez, publica como aplicación web ("Cualquier persona") y pega la URL `/exec` en `RSVP_ENDPOINT` dentro de [`lib/content.ts`](lib/content.ts). La pestaña 1 guarda respuestas (`Fecha | Nombre | Teléfono | Asistencia`); la pestaña 2 es la lista de invitados (un nombre por fila).
+- **La lista nunca llega al navegador:** el visitante escribe su nombre completo y [`app/api/rsvp/route.ts`](app/api/rsvp/route.ts) consulta Google Sheets en el servidor. La respuesta pública solo contiene si ese nombre coincide, su escritura canónica y si ya respondió.
+- **Sin desplegable ni sugerencias:** un nombre válido aparece en “Personas agregadas”. Los duplicados, nombres que no coinciden y respuestas previas se bloquean con mensajes separados.
+- **Envío verificado:** el servidor valida nuevamente todas las personas antes de escribir. La hoja recibe una fila por persona y el sitio solo muestra éxito cuando Google confirma el registro.
+- **Configuración:** el endpoint actual funciona como respaldo privado del servidor. En producción se puede definir `RSVP_SCRIPT_URL` con la URL `/exec` del Apps Script.
+- **Actualizar Google Apps Script:** reemplaza el código publicado por [`google-apps-script.gs`](google-apps-script.gs), ejecuta `prepararEncabezados` una vez y crea una nueva versión de la aplicación web. La pestaña 1 guarda respuestas (`Fecha | Nombre | Teléfono | Asistencia`); la pestaña 2 contiene un nombre por fila. La nueva versión de `doGet` nunca devuelve la lista completa.
 
 ## Sistema de diseño
 

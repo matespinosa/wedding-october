@@ -6,13 +6,21 @@
    Datos reales de la boda de Mateo & Julieth · Bogotá.
    ———————————————————————————————————————————————— */
 
+/* Fotos de la galería. Se importan para que Next calcule solo el tamaño
+   y genere el blur de carga. Para añadir una foto nueva: deja el archivo
+   en public/images/gallery/, impórtalo aquí y añádelo a gallery.photos. */
+import galDetalle from "@/public/images/gallery/detalle.jpg";
+import galConfeti from "@/public/images/gallery/matrimonio-1.jpg";
+import galCiudadCivil from "@/public/images/gallery/matrimonio-2.jpg";
+import galCerezo from "@/public/images/gallery/matrimonio-3.jpg";
+import galEscalera from "@/public/images/gallery/matrimonio-4.jpg";
+import galEscalinata from "@/public/images/gallery/other.jpg";
+import galReja from "@/public/images/gallery/propose-4.jpg";
+import galMomento from "@/public/images/gallery/propose.jpg";
+import galMirador from "@/public/images/gallery/propuesta.jpg";
+
 /** Sábado 3 de octubre de 2026 — hora de la ceremonia (Bogotá, UTC-5). */
 export const WEDDING_DATE = new Date("2026-10-03T11:00:00-05:00");
-
-/** Endpoint del Google Apps Script que escribe en la hoja de cálculo.
- *  Si creas una hoja nueva, redepliega google-apps-script.gs y pega aquí la URL /exec. */
-export const RSVP_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbyBBA0C4XRj9DaHfyZIt_JEfAUr8lkMNuV-8TBKR7OJIVIrr9q98fDEQyO5EWFiv0tgmA/exec";
 
 export const RSVP_DEADLINE = "15 de septiembre de 2026";
 
@@ -96,20 +104,72 @@ export const site = {
   },
 
   gallery: {
+    eyebrow: "Galería",
+    title: "Nuestros momentos",
+    intro:
+      "La propuesta en Nueva York y el día que nos dimos el sí ante la ley.",
     quote: "Cada paso nos trajo hasta aquí.",
+    hint: "Toca una foto para verla completa",
+    /** El primero siempre muestra todo; los demás filtran por `chapter`. */
+    chapters: [
+      { id: "todas", label: "Todas" },
+      { id: "propuesta", label: "La propuesta" },
+      { id: "civil", label: "El civil" },
+    ],
     photos: [
       {
-        src: "/images/propose.jpg",
-        alt: "Mateo pidiéndole matrimonio a Julieth, arrodillado frente a la baranda del parque",
-        position: "object-[center_42%]",
+        src: galMomento,
+        chapter: "propuesta",
+        alt: "Mateo arrodillado pidiéndole matrimonio a Julieth frente a la baranda del parque",
+        caption: "El sí",
       },
       {
-        src: "/images/other.jpg",
-        alt: "Mateo y Julieth sentados en la escalinata entre columnas de piedra",
+        src: galCerezo,
+        chapter: "propuesta",
+        alt: "Mateo y Julieth tomados de la mano bajo un cerezo en flor",
+        caption: "Abril en flor",
       },
       {
-        src: "/images/detalle.jpg",
-        alt: "Julieth ajustando el tacón blanco antes de la ceremonia",
+        src: galReja,
+        chapter: "propuesta",
+        alt: "Mateo y Julieth bajando las escaleras bajo el portón de hierro del parque",
+        caption: "Camino al parque",
+      },
+      {
+        src: galMirador,
+        chapter: "propuesta",
+        alt: "Mateo y Julieth de espaldas mirando los edificios de la ciudad",
+        caption: "Nueva York",
+      },
+      {
+        src: galEscalera,
+        chapter: "civil",
+        alt: "Mateo y Julieth bajando la escalera de mármol del palacio de justicia",
+        caption: "La escalera",
+      },
+      {
+        src: galConfeti,
+        chapter: "civil",
+        alt: "Mateo y Julieth caminando sobre pétalos frente a las puertas de bronce",
+        caption: "Recién casados",
+      },
+      {
+        src: galCiudadCivil,
+        chapter: "civil",
+        alt: "Julieth mirando a cámara mientras camina de la mano de Mateo por la ciudad",
+        caption: "Por la ciudad",
+      },
+      {
+        src: galEscalinata,
+        chapter: "civil",
+        alt: "Mateo y Julieth sentados y riendo en la escalinata entre columnas de piedra",
+        caption: "Entre columnas",
+      },
+      {
+        src: galDetalle,
+        chapter: "civil",
+        alt: "Julieth ajustando su tacón blanco antes de la ceremonia",
+        caption: "Los detalles",
       },
     ],
   },
@@ -142,18 +202,18 @@ export const site = {
     reception: {
       kind: "Reunión y celebración",
       name: "Retiro San Juan · Salón Magnolia",
-      address: "Vía La Calera",
+      address: "Vía Arrayanes",
       city: "Bogotá, Colombia",
       time: "5:00 p. m.",
       image: "/images/magnolio-2.jpg",
       imageAlt: "Jardines del Retiro San Juan iluminados al caer la noche",
       mapsUrl:
-        "https://www.google.com/maps/search/?api=1&query=Retiro+San+Juan+Salon+Magnolia+Via+La+Calera+Bogota",
+        "https://www.google.com/maps/search/?api=1&query=Retiro+San+Juan+Salon+Magnolio+Via+Arrayanes+Bogota",
       calendar: {
         title: "Boda de Mateo & Julieth — Celebración",
         description:
           "Recepción de la boda de Mateo & Julieth. ¡Celebremos juntos!",
-        location: "Retiro San Juan · Salón Magnolia, Vía La Calera, Bogotá",
+        location: "Retiro San Juan · Salón Magnolia, Vía Arrayanes, Bogotá",
         startLocal: "20261003T170000",
         endLocal: "20261004T000000",
       },
@@ -183,7 +243,7 @@ export const site = {
     eyebrow: "Confirma tu asistencia",
     title: "¿Nos acompañas?",
     intro: "Tu presencia es nuestro mejor regalo. Confírmanos tu asistencia.",
-    hint: "Solo quienes están en la lista de invitados podrán asistir. Si no encuentras tu nombre, escríbenos.",
+    hint: "Escribe el nombre completo tal como aparece en la invitación. Si no coincide, escríbenos para ayudarte.",
     success: {
       no: "Gracias por avisarnos. Te vamos a extrañar, pero sabemos que estarás con nosotros de corazón.",
     },
@@ -200,28 +260,3 @@ export const site = {
 } as const;
 
 export type Site = typeof site;
-
-/** Respaldo local por si la hoja de invitados no responde. */
-export const FALLBACK_GUESTS = [
-  "Jose Saenz", "Gladys Saenz", "Adriana Cubillos", "Andrea Saenz", "Sara Saenz",
-  "Laura Saenz", "Gio Saenz", "Johana", "Bonifacio Saenz", "Dora Murcia",
-  "Viviana Saenz", "Nicolas", "Jessica saenz", "Daniel Esposo", "Miguel Saenz",
-  "Diana Saenz", "Beto Saenz", "Carolina +", "Daniel Saenz", "Camilo Saenz",
-  "Maria Jose", "German Saenz", "Marlen Murcia", "Cristian", "Geraldine Saenz",
-  "hijo", "Rosita Saenz", "Carmen Saenz", "Nubia Gordillo", "Lucho Rojas",
-  "Sebastian Rojas", "Santiago Rojas", "Diana Guzman", "Gio Gordillo", "Saray",
-  "Pablito", "Martin", "Dona Cecilia", "Elizabeth Ortiz", "Nicolas Ortiz",
-  "Juan David", "Tia Maruja", "Javier Otriz", "Daniela Esposa+", "Dario Alarcon",
-  "Milena Alarcon", "Javier Ortiz S", "Clarena +", "Julio Escobar", "Betty Escobar",
-  "Paty Saenta", "Tefa", "Richar Alarcon", "Esposa+", "Hijo+",
-  "Jessica calderon", "Sebastian Marulanda", "Luisa Fernanda", "Cristian Arevalo",
-  "Karen Gomez", "Valentina Marulanda", "Sandra Garcia", "Alicia Garcia",
-  "Liliana Cubillos", "Raul Borie", "Jaime Cubillos", "Sara Cubillos",
-  "Malu Prieto", "Alejandra Cubillos", "Daniela Borie", "Miguel Borie",
-  "Sabine Borie", "Xochilt Espinosa", "Fernanda Iglesia", "Juan David Velasquez",
-  "Camila", "Elias Nassar", "Hr. Felipe", "Hna. Leandra", "Hno Cristian",
-  "Hna Jaqueline", "Luis Mendoza", "Maribel +", "Marina Quintero", "Samuel",
-  "Daniela Quintero", "Vicente Quintero", "Blanca Quintero", "Horario Zapata",
-  "Blanca Gallego", "Juan José Díaz", "Juan José Díaz (Novia)", "Paula lenis",
-  "Sebastian Varon", "Erika Ceballos",
-];

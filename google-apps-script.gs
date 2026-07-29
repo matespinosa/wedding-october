@@ -1,75 +1,192 @@
 /**
- * Recibe las confirmaciones del formulario y las agrega a la hoja de cálculo.
+ * Backend privado del RSVP en Google Sheets.
  *
- * Cómo usarlo:
- *  1. Crea una Hoja de cálculo de Google nueva (sheets.new).
- *  2. Menú: Extensiones → Apps Script. Borra todo y pega ESTE archivo.
- *  3. Ejecuta una vez la función `prepararEncabezados` (botón ▶) y autoriza los permisos.
- *  4. Implementar → Nueva implementación → tipo "Aplicación web".
- *       - Ejecutar como: Yo
- *       - Quién tiene acceso: Cualquier persona
- *     Copia la URL que termina en /exec.
- *  5. Pega esa URL en `RSVP_ENDPOINT` dentro de src/rsvp.js.
+ * Estructura de la hoja:
+ *   - Pestaña 1: respuestas (Fecha | Nombre | Teléfono | Asistencia).
+ *   - Pestaña 2: lista de invitados (un nombre por fila, sin encabezado).
  *
- * Si cambias este código, vuelve a Implementar → Administrar implementaciones → Editar
- * → Nueva versión (si no, sigue corriendo la versión vieja).
+ * Publicación:
+ *  1. En la hoja: Extensiones → Apps Script.
+ *  2. Reemplaza el código por este archivo.
+ *  3. Ejecuta `prepararEncabezados` una vez y autoriza los permisos.
+ *  4. Implementar → Administrar implementaciones → Editar → Nueva versión.
+ *  5. Tipo "Aplicación web", ejecutada como tú y accesible para cualquier persona.
+ *
+ * El sitio consulta un nombre exacto por vez. `doGet` nunca devuelve la lista
+ * completa y `doPost` vuelve a validar cada persona antes de escribir.
  */
 
 function prepararEncabezados() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(['Fecha', 'Nombre', 'Teléfono', 'Asistencia']);
   }
 }
 
+function normalizarNombre(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function responderJson(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function obtenerMapaInvitados(ss) {
+  var guestSheet = ss.getSheets()[1];
+  if (!guestSheet) {
+    throw new Error('No existe la pestaña 2 con la lista de invitados.');
+  }
+
+  var map = {};
+  guestSheet.getDataRange().getValues().forEach(function (row) {
+    var canonicalName = String(row[0] || '').replace(/\s+/g, ' ').trim();
+    if (canonicalName) {
+      map[normalizarNombre(canonicalName)] = canonicalName;
+    }
+  });
+  return map;
+}
+
+function obtenerConfirmados(ss) {
+  var respSheet = ss.getSheets()[0];
+  var confirmed = {};
+
+  if (respSheet.getLastRow() < 2) {
+    return confirmed;
+  }
+
+  respSheet
+    .getRange(2, 2, respSheet.getLastRow() - 1, 1)
+    .getValues()
+    .forEach(function (row) {
+      var normalized = normalizarNombre(row[0]);
+      if (normalized) confirmed[normalized] = true;
+    });
+
+  return confirmed;
+}
+
 function doGet(e) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    var requestedName =
+      e && e.parameter && e.parameter.name
+        ? String(e.parameter.name).replace(/\s+/g, ' ').trim()
+        : '';
 
-    // Pestaña 2: lista de invitados (una columna de nombres, sin encabezado).
-    const guestSheet = ss.getSheets()[1];
-    const names = guestSheet.getDataRange().getValues()
-      .map(row => String(row[0]).trim())
-      .filter(name => name.length > 0);
+    if (!requestedName) {
+      return responderJson({ matched: false, confirmed: false });
+    }
 
-    // Pestaña 1: respuestas. Quiénes ya confirmaron (columna Nombre, sin encabezado).
-    const respSheet = ss.getSheets()[0];
-    const confirmed = respSheet.getDataRange().getValues()
-      .slice(1) // salta la fila de encabezados
-      .map(row => String(row[1]).trim())
-      .filter(name => name.length > 0);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var guestMap = obtenerMapaInvitados(ss);
+    var normalized = normalizarNombre(requestedName);
+    var canonicalName = guestMap[normalized];
 
-    return ContentService.createTextOutput(JSON.stringify({ names, confirmed }))
-      .setMimeType(ContentService.MimeType.JSON);
+    if (!canonicalName) {
+      return responderJson({ matched: false, confirmed: false });
+    }
+
+    var confirmed = obtenerConfirmados(ss);
+    return responderJson({
+      matched: true,
+      name: canonicalName,
+      confirmed: confirmed[normalized] === true,
+    });
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ names: [], confirmed: [], error: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return responderJson({
+      matched: false,
+      confirmed: false,
+      error: String(err),
+    });
   }
 }
 
 function doPost(e) {
+  var lock = LockService.getDocumentLock();
+
   try {
-    const data = JSON.parse(e.postData.contents);
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['Fecha', 'Nombre', 'Teléfono', 'Asistencia']);
-    }
-    const fecha = new Date();
-    const asistencia = data.asistencia === 'si' ? 'Sí asiste'
-      : data.asistencia === 'no' ? 'No asiste' : '';
-    // Una fila por persona (un envío puede traer varias).
-    const nombres = (Array.isArray(data.nombres) && data.nombres.length)
-      ? data.nombres
-      : [data.nombre || ''];
-    nombres.forEach(function (nombre) {
-      sheet.appendRow([fecha, nombre, data.telefono || '', asistencia]);
+    var data = JSON.parse(e.postData.contents);
+    var rawNames =
+      Array.isArray(data.nombres) && data.nombres.length
+        ? data.nombres
+        : [data.nombre || ''];
+    var seen = {};
+    var requestedNames = [];
+
+    rawNames.forEach(function (value) {
+      var name = String(value || '').replace(/\s+/g, ' ').trim();
+      var normalized = normalizarNombre(name);
+      if (name && !seen[normalized]) {
+        seen[normalized] = true;
+        requestedNames.push(name);
+      }
     });
-    return ContentService.createTextOutput(
-      JSON.stringify({ ok: true }),
-    ).setMimeType(ContentService.MimeType.JSON);
+
+    var telefono = String(data.telefono || '').trim();
+    var asistencia =
+      data.asistencia === 'si'
+        ? 'Sí asiste'
+        : data.asistencia === 'no'
+          ? 'No asiste'
+          : '';
+
+    if (!requestedNames.length || !telefono || !asistencia) {
+      return responderJson({
+        ok: false,
+        error: 'Faltan nombres, teléfono o asistencia.',
+      });
+    }
+
+    lock.waitLock(10000);
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var guestMap = obtenerMapaInvitados(ss);
+    var confirmed = obtenerConfirmados(ss);
+    var canonicalNames = [];
+
+    for (var i = 0; i < requestedNames.length; i += 1) {
+      var normalizedName = normalizarNombre(requestedNames[i]);
+      var canonicalName = guestMap[normalizedName];
+
+      if (!canonicalName) {
+        return responderJson({
+          ok: false,
+          error: 'Una de las personas no está en la lista de invitados.',
+        });
+      }
+      if (confirmed[normalizedName]) {
+        return responderJson({
+          ok: false,
+          error: 'Una de las personas ya había registrado una respuesta.',
+        });
+      }
+      canonicalNames.push(canonicalName);
+    }
+
+    var responseSheet = ss.getSheets()[0];
+    if (responseSheet.getLastRow() === 0) {
+      responseSheet.appendRow(['Fecha', 'Nombre', 'Teléfono', 'Asistencia']);
+    }
+
+    var now = new Date();
+    var rows = canonicalNames.map(function (name) {
+      return [now, name, telefono, asistencia];
+    });
+    responseSheet
+      .getRange(responseSheet.getLastRow() + 1, 1, rows.length, 4)
+      .setValues(rows);
+    SpreadsheetApp.flush();
+
+    return responderJson({ ok: true });
   } catch (err) {
-    return ContentService.createTextOutput(
-      JSON.stringify({ ok: false, error: String(err) }),
-    ).setMimeType(ContentService.MimeType.JSON);
+    return responderJson({ ok: false, error: String(err) });
+  } finally {
+    if (lock.hasLock()) lock.releaseLock();
   }
 }

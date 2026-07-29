@@ -15,9 +15,9 @@ export default function Home() {
       <Hero />
       <Countdown />
       <Story />
-      <SectionDivider bg="bg-cream" fill="fill-ink" />
+      {/* La galería va de cream a shell, así que enlaza sola con Historia
+          y con Ceremonia: no necesita ondas de separación. */}
       <Gallery />
-      <SectionDivider bg="bg-ink" fill="fill-shell" />
       <Venues />
       <SectionDivider bg="bg-shell" fill="fill-ink" />
       <DressCode />

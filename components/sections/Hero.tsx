@@ -233,20 +233,11 @@ export function Hero() {
           </span>
         </h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={ready ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.9, ease: EASE_OUT, delay: 1.55 }}
-          className="mt-7 text-[13px] font-medium uppercase tracking-[0.26em] text-ink/70 md:text-sm md:tracking-[0.3em]"
-        >
-          {site.date.display}
-        </motion.p>
-
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={ready ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.9, ease: EASE_OUT, delay: 1.75 }}
-          className="mt-6 hidden md:block"
+          transition={{ duration: 0.9, ease: EASE_OUT, delay: 1.55 }}
+          className="mt-8 hidden md:block"
         >
           <Button
             href="#historia"

@@ -1,31 +1,41 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarHeart, Clock, MapPin, Plus, Send, X } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  CalendarHeart,
+  Check,
+  Clock,
+  LoaderCircle,
+  MapPin,
+  Plus,
+  Send,
+  X,
+} from "lucide-react";
+import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { FloralBranch } from "@/components/ui/Florals";
-import { GuestCombobox } from "@/components/ui/GuestCombobox";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionDivider } from "@/components/ui/SectionDivider";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { RSVP_DEADLINE, RSVP_ENDPOINT, site } from "@/lib/content";
-import { isConfirmed, isOnList, loadGuestData, markConfirmed } from "@/lib/guests";
+import { RSVP_DEADLINE, site } from "@/lib/content";
 import { EASE_OUT, EASE_SOFT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type Entry = { id: number; name: string };
 type Note = { text: string; state: "" | "ok" | "error" };
+type LookupResponse = {
+  matched?: boolean;
+  name?: string;
+  confirmed?: boolean;
+  error?: string;
+};
 
-/** Mensaje en línea por persona (ya confirmó / no está en la lista). */
-function entryMsg(name: string): { text: string; tone: "ok" | "error" } | null {
-  const n = name.trim();
-  if (!n) return null;
-  if (isConfirmed(n))
-    return { text: "✓ Esta persona ya confirmó su asistencia.", tone: "ok" };
-  if (!isOnList(n))
-    return { text: "Este nombre no está en la lista de invitados.", tone: "error" };
-  return null;
-}
+const normalizeName = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 
 function SuccessView({
   name,
@@ -90,13 +100,19 @@ function SuccessView({
 }
 
 /**
- * Confirmación de asistencia — multi-invitado, contra la lista de invitados.
- * Cada nombre debe estar en la lista; teléfono y asistencia son del grupo.
- * Envía a Google Sheets (Apps Script) y guarda un respaldo en localStorage.
+ * Confirmación privada contra Google Sheets.
+ * La lista completa nunca se descarga al navegador: cada persona se valida
+ * por coincidencia exacta y solo entonces aparece en "Personas agregadas".
  */
 export function Rsvp() {
-  const [entries, setEntries] = useState<Entry[]>([{ id: 0, name: "" }]);
+  const [entries, setEntries] = useState<Entry[]>([]);
   const nextId = useRef(1);
+  const [candidate, setCandidate] = useState("");
+  const [lookupStatus, setLookupStatus] = useState<"idle" | "checking">("idle");
+  const [lookupNote, setLookupNote] = useState<Note>({
+    text: "",
+    state: "",
+  });
   const [telefono, setTelefono] = useState("");
   const [asistencia, setAsistencia] = useState<"" | "si" | "no">("");
   const [note, setNote] = useState<Note>({ text: "", state: "" });
@@ -105,117 +121,188 @@ export function Rsvp() {
     name: "",
     attendance: "si",
   });
-  const inputRefs = useRef(new Map<number, HTMLInputElement>());
+  const candidateRef = useRef<HTMLInputElement>(null);
 
-  // Al montar, hidrata la lista de invitados y confirmaciones desde la hoja.
-  useEffect(() => {
-    void loadGuestData(RSVP_ENDPOINT);
-  }, []);
+  const addEntry = async () => {
+    if (lookupStatus === "checking") return;
 
-  const setEntryName = (id: number, name: string) =>
-    setEntries((prev) => prev.map((en) => (en.id === id ? { ...en, name } : en)));
-
-  const addEntry = () => {
-    const last = entries[entries.length - 1];
-    if (last && !last.name.trim()) {
-      inputRefs.current.get(last.id)?.focus();
+    const name = candidate.replace(/\s+/g, " ").trim();
+    if (!name) {
+      setLookupNote({
+        text: "Escribe tu nombre y apellido para verificarlo.",
+        state: "error",
+      });
+      candidateRef.current?.focus();
       return;
     }
-    setEntries((prev) => [...prev, { id: nextId.current++, name: "" }]);
+
+    if (entries.some((entry) => normalizeName(entry.name) === normalizeName(name))) {
+      setLookupNote({
+        text: "Esta persona ya está agregada a la confirmación.",
+        state: "error",
+      });
+      return;
+    }
+
+    setLookupStatus("checking");
+    setLookupNote({ text: "Verificando nombre…", state: "" });
+
+    try {
+      const response = await fetch(`/api/rsvp?name=${encodeURIComponent(name)}`, {
+        cache: "no-store",
+      });
+      const result = (await response.json()) as LookupResponse;
+
+      if (!response.ok) {
+        throw new Error(result.error || "No pudimos verificar el nombre.");
+      }
+
+      if (!result.matched) {
+        setLookupNote({
+          text: "No encontramos una coincidencia. Revisa el nombre y apellido tal como aparecen en tu invitación.",
+          state: "error",
+        });
+        return;
+      }
+
+      if (result.confirmed) {
+        setLookupNote({
+          text: "Esta persona ya registró una respuesta anteriormente.",
+          state: "error",
+        });
+        return;
+      }
+
+      const canonicalName = result.name?.trim() || name;
+      if (
+        entries.some(
+          (entry) => normalizeName(entry.name) === normalizeName(canonicalName),
+        )
+      ) {
+        setLookupNote({
+          text: "Esta persona ya está agregada a la confirmación.",
+          state: "error",
+        });
+        return;
+      }
+
+      setEntries((current) => [
+        ...current,
+        { id: nextId.current++, name: canonicalName },
+      ]);
+      setCandidate("");
+      setLookupNote({
+        text: `${canonicalName} quedó agregado.`,
+        state: "ok",
+      });
+      setNote({ text: "", state: "" });
+      candidateRef.current?.focus();
+    } catch (error) {
+      setLookupNote({
+        text:
+          error instanceof Error
+            ? error.message
+            : "No pudimos verificar el nombre. Intenta nuevamente.",
+        state: "error",
+      });
+    } finally {
+      setLookupStatus("idle");
+    }
   };
 
-  const removeEntry = (id: number) =>
-    setEntries((prev) => prev.filter((en) => en.id !== id));
+  const removeEntry = (id: number) => {
+    setEntries((current) => current.filter((entry) => entry.id !== id));
+    setLookupNote({ text: "", state: "" });
+    candidateRef.current?.focus();
+  };
+
+  const onCandidateKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void addEntry();
+    }
+  };
 
   const resetForm = () => {
-    setEntries([{ id: nextId.current++, name: "" }]);
+    setEntries([]);
+    setCandidate("");
+    setLookupNote({ text: "", state: "" });
     setTelefono("");
     setAsistencia("");
     setNote({ text: "", state: "" });
     setStatus("idle");
   };
 
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    const names = entries.map((en) => en.name.trim()).filter(Boolean);
-
-    if (names.length === 0 || !telefono.trim() || !asistencia) {
+    if (candidate.trim()) {
       setNote({
-        text: "Completa al menos un nombre, el teléfono y si nos acompañas.",
+        text: "Verifica y agrega el nombre que quedó pendiente antes de enviar.",
+        state: "error",
+      });
+      candidateRef.current?.focus();
+      return;
+    }
+
+    if (entries.length === 0 || !telefono.trim() || !asistencia) {
+      setNote({
+        text: "Agrega al menos una persona, el teléfono y si nos acompañas.",
         state: "error",
       });
       return;
     }
 
-    const notListed = names.filter((n) => !isOnList(n));
-    if (notListed.length) {
-      setNote({
-        text: `No está en la lista de invitados: ${notListed.join(", ")}. Solo las personas registradas podrán asistir.`,
-        state: "error",
-      });
-      return;
-    }
+    setStatus("sending");
+    setNote({ text: "", state: "" });
 
-    const already = names.filter((n) => isConfirmed(n));
-    if (already.length) {
-      setNote({
-        text: `Ya había(n) confirmado: ${already.join(", ")}. Puedes quitar ese nombre del formulario.`,
-        state: "error",
-      });
-      return;
-    }
-
-    const record = {
-      nombres: names,
-      nombre: names.join(", "), // compatibilidad con la hoja
-      telefono: telefono.trim(),
-      asistencia,
-      ts: new Date().toISOString(),
-    };
-
-    // Respaldo local (siempre).
     try {
-      const all = JSON.parse(localStorage.getItem("rsvp") || "[]");
-      all.push(record);
-      localStorage.setItem("rsvp", JSON.stringify(all));
-    } catch {
-      /* almacenamiento no disponible: no es crítico */
-    }
+      const response = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombres: entries.map((entry) => entry.name),
+          telefono: telefono.trim(),
+          asistencia,
+        }),
+      });
+      const result = (await response.json()) as { ok?: boolean; error?: string };
 
-    if (RSVP_ENDPOINT) {
-      setStatus("sending");
-      setNote({ text: "Enviando…", state: "" });
-      try {
-        await fetch(RSVP_ENDPOINT, {
-          method: "POST",
-          mode: "no-cors", // Apps Script no devuelve CORS; el envío sí se registra
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(record),
-        });
-      } catch {
-        /* el respaldo local ya quedó guardado */
+      if (!response.ok || result.ok !== true) {
+        throw new Error(
+          result.error || "No pudimos guardar tu confirmación. Intenta de nuevo.",
+        );
       }
-    }
 
-    names.forEach(markConfirmed);
-    setDone({ name: names[0], attendance: asistencia });
-    setStatus("success");
+      setDone({ name: entries[0].name, attendance: asistencia });
+      setStatus("success");
+    } catch (error) {
+      setStatus("idle");
+      setNote({
+        text:
+          error instanceof Error
+            ? error.message
+            : "No pudimos guardar tu confirmación. Intenta de nuevo.",
+        state: "error",
+      });
+    }
   };
 
   return (
     <section id="rsvp" className="relative overflow-hidden bg-cream">
-      {/* Ambiente detrás del vidrio */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="animate-drift absolute right-[-10%] top-[-6%] size-[34rem] rounded-full bg-gold/[0.14] blur-3xl" />
         <div className="animate-drift-slow absolute bottom-[-12%] left-[-8%] size-[38rem] rounded-full bg-sand/60 blur-3xl" />
       </div>
 
-      {/* Ola superior: el cream del RSVP asoma (no un blanco aparte) */}
-      <SectionDivider bg="bg-transparent" fill="fill-ink" flip className="relative z-[1] -mt-px" />
+      <SectionDivider
+        bg="bg-transparent"
+        fill="fill-ink"
+        flip
+        className="relative z-[1] -mt-px"
+      />
 
       <div className="relative z-[1] mx-auto grid max-w-6xl gap-14 px-5 pb-28 pt-28 md:px-8 md:pb-40 md:pt-40 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
-        {/* Columna editorial */}
         <div className="lg:pt-8">
           <SectionHeading
             align="left"
@@ -226,16 +313,28 @@ export function Rsvp() {
           <Reveal delay={0.3} y={18}>
             <ul className="mt-8 space-y-4 text-[18px] text-ink/70">
               <li className="flex items-center gap-3">
-                <CalendarHeart size={20} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
+                <CalendarHeart
+                  size={20}
+                  strokeWidth={1.75}
+                  className="shrink-0 text-gold-deep"
+                />
                 {site.date.long}
               </li>
               <li className="flex items-center gap-3">
-                <Clock size={20} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
+                <Clock
+                  size={20}
+                  strokeWidth={1.75}
+                  className="shrink-0 text-gold-deep"
+                />
                 Ceremonia {site.venues.ceremony.time} · Celebración{" "}
                 {site.venues.reception.time}
               </li>
               <li className="flex items-center gap-3">
-                <MapPin size={20} strokeWidth={1.75} className="shrink-0 text-gold-deep" />
+                <MapPin
+                  size={20}
+                  strokeWidth={1.75}
+                  className="shrink-0 text-gold-deep"
+                />
                 {site.date.city}
               </li>
             </ul>
@@ -253,7 +352,6 @@ export function Rsvp() {
           />
         </div>
 
-        {/* Tarjeta de vidrio */}
         <Reveal delay={0.15} y={40} blur={false}>
           <div className="relative rounded-[32px] border border-white/80 bg-white/50 p-7 shadow-[0_60px_150px_-70px_rgba(27,27,27,0.45)] backdrop-blur-2xl md:p-12">
             <AnimatePresence mode="wait">
@@ -272,65 +370,142 @@ export function Rsvp() {
                   transition={{ duration: 0.5, ease: EASE_OUT }}
                   className="space-y-8"
                 >
-                  {/* Nombres — multi-invitado */}
                   <div>
-                    <span className="mb-3 block text-[12px] font-medium uppercase tracking-[0.22em] text-bronze">
-                      Nombre
-                    </span>
-                    <div className="space-y-4">
-                      {entries.map((entry, i) => {
-                        const msg = entryMsg(entry.name);
-                        return (
-                          <div key={entry.id}>
-                            <div className="flex gap-2">
-                              <GuestCombobox
-                                value={entry.name}
-                                onChange={(v) => setEntryName(entry.id, v)}
-                                autoFocus={i > 0}
-                                inputRef={(el) => {
-                                  if (el) inputRefs.current.set(entry.id, el);
-                                  else inputRefs.current.delete(entry.id);
-                                }}
-                              />
-                              {i > 0 && (
-                                <button
-                                  type="button"
-                                  aria-label="Quitar persona"
-                                  onClick={() => removeEntry(entry.id)}
-                                  className="flex size-[3.25rem] shrink-0 items-center justify-center rounded-full border border-gold/50 bg-white/20 text-ink/50 backdrop-blur-sm transition-colors duration-300 hover:border-gold/75 hover:bg-white/30 hover:text-ink"
-                                >
-                                  <X size={15} />
-                                </button>
-                              )}
-                            </div>
-                            {msg && (
-                              <p
-                                role="status"
-                                className={cn(
-                                  "mt-2 text-[15px]",
-                                  msg.tone === "ok" ? "text-gold-deep" : "text-clay",
-                                )}
-                              >
-                                {msg.text}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addEntry}
-                      className="mt-4 inline-flex items-center gap-1.5 text-[14px] uppercase tracking-[0.14em] text-bronze underline-offset-4 transition-colors hover:text-ink hover:underline"
+                    <label
+                      htmlFor="guest-name"
+                      className="mb-3 block text-[12px] font-medium uppercase tracking-[0.22em] text-bronze"
                     >
-                      <Plus size={15} strokeWidth={2} /> Agregar otra persona
-                    </button>
-                    <p className="mt-4 text-[16px] leading-relaxed text-ink/55">
+                      Nombre y apellido
+                    </label>
+
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <input
+                        id="guest-name"
+                        ref={candidateRef}
+                        type="text"
+                        autoComplete="off"
+                        spellCheck={false}
+                        placeholder="Escribe tu nombre completo"
+                        className="min-w-0 flex-1 rounded-full border border-gold/50 bg-white/20 px-5 py-3.5 text-[18px] text-ink outline-none backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/60 hover:border-gold/75 hover:bg-white/30 focus:border-bronze focus:bg-white/35 focus:ring-2 focus:ring-gold/30"
+                        value={candidate}
+                        onChange={(event) => {
+                          setCandidate(event.target.value);
+                          setLookupNote({ text: "", state: "" });
+                        }}
+                        onKeyDown={onCandidateKeyDown}
+                        aria-describedby="guest-privacy guest-lookup-note"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void addEntry()}
+                        disabled={lookupStatus === "checking" || !candidate.trim()}
+                        className="inline-flex min-h-[3.5rem] shrink-0 items-center justify-center gap-2 rounded-full bg-bronze px-5 text-[13px] font-medium uppercase tracking-[0.12em] text-cream transition-[background-color,opacity] duration-300 hover:bg-ink disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        {lookupStatus === "checking" ? (
+                          <LoaderCircle
+                            size={16}
+                            className="animate-spin"
+                            aria-hidden
+                          />
+                        ) : (
+                          <Plus size={16} aria-hidden />
+                        )}
+                        {lookupStatus === "checking" ? "Verificando" : "Agregar"}
+                      </button>
+                    </div>
+
+                    <p
+                      id="guest-privacy"
+                      className="mt-3 text-[15px] leading-relaxed text-ink/65"
+                    >
+                      La búsqueda es privada: no mostraremos la lista de invitados.
+                    </p>
+
+                    <div
+                      id="guest-lookup-note"
+                      className="min-h-6"
+                      aria-live="polite"
+                    >
+                      {lookupNote.text && (
+                        <p
+                          className={cn(
+                            "mt-2 text-[15px]",
+                            lookupNote.state === "ok"
+                              ? "text-bronze"
+                              : lookupNote.state === "error"
+                                ? "text-clay"
+                                : "text-ink/60",
+                          )}
+                        >
+                          {lookupNote.state === "ok" && (
+                            <Check
+                              size={15}
+                              strokeWidth={2.2}
+                              className="mr-1 inline-block align-[-2px]"
+                              aria-hidden
+                            />
+                          )}
+                          {lookupNote.text}
+                        </p>
+                      )}
+                    </div>
+
+                    <AnimatePresence initial={false}>
+                      {entries.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="mt-4"
+                        >
+                          <p className="mb-2 text-[14px] font-medium text-ink/70">
+                            Personas agregadas ({entries.length})
+                          </p>
+                          <ul
+                            aria-label="Personas agregadas"
+                            className="space-y-2"
+                          >
+                            <AnimatePresence initial={false}>
+                              {entries.map((entry) => (
+                                <motion.li
+                                  key={entry.id}
+                                  layout
+                                  initial={{ opacity: 0, y: 8 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, x: -8 }}
+                                  transition={{ duration: 0.25, ease: EASE_OUT }}
+                                  className="flex items-center gap-3 rounded-[14px] bg-gold/[0.11] px-4 py-3 text-ink"
+                                >
+                                  <span
+                                    className="flex size-6 shrink-0 items-center justify-center rounded-full bg-bronze text-cream"
+                                    aria-hidden
+                                  >
+                                    <Check size={14} strokeWidth={2.3} />
+                                  </span>
+                                  <span className="min-w-0 flex-1 text-[17px]">
+                                    {entry.name}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    aria-label={`Quitar a ${entry.name}`}
+                                    onClick={() => removeEntry(entry.id)}
+                                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-ink/55 transition-colors hover:bg-white/60 hover:text-ink"
+                                  >
+                                    <X size={15} aria-hidden />
+                                  </button>
+                                </motion.li>
+                              ))}
+                            </AnimatePresence>
+                          </ul>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <p className="mt-4 text-[16px] leading-relaxed text-ink/60">
                       {site.rsvp.hint}
                     </p>
                   </div>
 
-                  {/* Teléfono */}
                   <label className="block">
                     <span className="mb-3 block text-[12px] font-medium uppercase tracking-[0.22em] text-bronze">
                       Teléfono
@@ -340,13 +515,12 @@ export function Rsvp() {
                       inputMode="tel"
                       autoComplete="tel"
                       placeholder="+57 300 000 0000"
-                      className="w-full rounded-full border border-gold/50 bg-white/20 px-5 py-3.5 text-[18px] text-ink outline-none backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/40 hover:border-gold/75 hover:bg-white/30 focus:border-bronze focus:bg-white/35 focus:ring-2 focus:ring-gold/30"
+                      className="w-full rounded-full border border-gold/50 bg-white/20 px-5 py-3.5 text-[18px] text-ink outline-none backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/60 hover:border-gold/75 hover:bg-white/30 focus:border-bronze focus:bg-white/35 focus:ring-2 focus:ring-gold/30"
                       value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
+                      onChange={(event) => setTelefono(event.target.value)}
                     />
                   </label>
 
-                  {/* Asistencia */}
                   <fieldset>
                     <legend className="mb-3 text-[15px] font-medium tracking-normal text-bronze normal-case">
                       Confirmar asistencia
@@ -424,7 +598,6 @@ export function Rsvp() {
         </Reveal>
       </div>
 
-      {/* La ola nace del cream del RSVP para empalmar con Closing sin franja blanca */}
       <SectionDivider bg="bg-transparent" fill="fill-ink" />
     </section>
   );
