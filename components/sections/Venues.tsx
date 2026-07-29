@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { FloralBranch, RingsOrnament } from "@/components/ui/Florals";
 import { ParallaxImage } from "@/components/ui/Parallax";
-import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { site } from "@/lib/content";
 import { EASE_OUT } from "@/lib/motion";
@@ -136,12 +135,6 @@ export function Venues() {
         <div className="mt-10 flex justify-center">
           <RingsOrnament animate className="h-14 text-gold/80" />
         </div>
-
-        <Reveal delay={0.15} y={18}>
-          <p className="mt-6 text-center font-serif text-[1.9rem] font-light italic text-ink/80 md:text-4xl">
-            {site.date.long}
-          </p>
-        </Reveal>
 
         <div className="mt-14 grid gap-6 md:mt-20 md:grid-cols-2 md:gap-10">
           <VenueCard
