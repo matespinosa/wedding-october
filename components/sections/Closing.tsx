@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { FloralBranch, RoseBloom } from "@/components/ui/Florals";
 import { ParallaxImage } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
-import { TextReveal } from "@/components/ui/TextReveal";
 import { site } from "@/lib/content";
 import { EASE_OUT } from "@/lib/motion";
 import { mulberry32 } from "@/lib/utils";
@@ -80,16 +79,7 @@ export function Closing() {
           </p>
         </Reveal>
 
-        <TextReveal
-          as="p"
-          text={site.closing.quote}
-          per="word"
-          stagger={0.06}
-          delay={0.2}
-          className="mt-14 font-serif text-[clamp(2rem,5vw,3.6rem)] font-light leading-[1.25] text-balance text-cream"
-        />
-
-        <Reveal delay={0.35} y={20}>
+        <Reveal delay={0.2} y={20}>
           <p className="mt-14 text-[13px] uppercase tracking-[0.3em] text-cream/55">
             {site.closing.farewell}
           </p>
