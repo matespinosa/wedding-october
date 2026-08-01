@@ -289,20 +289,8 @@ export function Rsvp() {
   };
 
   return (
-    <section id="rsvp" className="relative overflow-hidden bg-cream">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="animate-drift absolute right-[-10%] top-[-6%] size-[34rem] rounded-full bg-gold/[0.14] blur-3xl" />
-        <div className="animate-drift-slow absolute bottom-[-12%] left-[-8%] size-[38rem] rounded-full bg-sand/60 blur-3xl" />
-      </div>
-
-      <SectionDivider
-        bg="bg-transparent"
-        fill="fill-ink"
-        flip
-        className="relative z-[1] -mt-px"
-      />
-
-      <div className="relative z-[1] mx-auto grid max-w-6xl gap-14 px-5 pb-28 pt-28 md:px-8 md:pb-40 md:pt-40 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
+    <section id="rsvp" className="relative">
+      <div className="mx-auto grid max-w-6xl gap-14 px-5 pb-28 pt-16 md:px-8 md:pb-40 md:pt-20 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
         <div className="lg:pt-8">
           <SectionHeading
             align="left"

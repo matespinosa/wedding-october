@@ -117,12 +117,17 @@ export function DressCode() {
   return (
     <section
       id="dress-code"
-      className="relative overflow-hidden bg-ink py-28 text-cream md:py-36"
+      className="relative overflow-hidden bg-ink pt-28 pb-32 text-cream md:py-36"
     >
-      {/* Viñeta ambiental dorada */}
+      {/* Viñeta ambiental dorada. El centro va a un 32% del alto (no al
+          8%) para que la mancha se apague del todo antes de tocar el
+          borde superior: si toca el borde, se corta en una línea recta
+          justo donde termina la onda del divisor, y esa costura recta
+          es lo que se leía como "cortado". Así el brillo nace ya
+          dentro de la sección, disolviéndose en el ink que trae la onda. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-[radial-gradient(55%_45%_at_50%_8%,rgba(198,169,122,0.12),transparent_70%)]"
+        className="absolute inset-0 bg-[radial-gradient(60%_42%_at_50%_32%,rgba(198,169,122,0.14),transparent_65%)]"
       />
 
       <div className="relative mx-auto max-w-5xl px-5 md:px-8">

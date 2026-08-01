@@ -109,12 +109,20 @@ export const site = {
     intro:
       "La propuesta en Nueva York y el día que nos dimos el sí ante la ley.",
     quote: "Cada paso nos trajo hasta aquí.",
-    hint: "Toca una foto para verla completa",
-    /** El primero siempre muestra todo; los demás filtran por `chapter`. */
+    hint: "Desliza para recorrer el álbum · toca una foto para ampliarla",
+    /** Cada capítulo abre con su propia portadilla dentro del álbum, y
+     *  los botones de arriba llevan el carrusel hasta ella. */
     chapters: [
-      { id: "todas", label: "Todas" },
-      { id: "propuesta", label: "La propuesta" },
-      { id: "civil", label: "El civil" },
+      {
+        id: "propuesta",
+        label: "La propuesta",
+        note: "Nueva York · abril",
+      },
+      {
+        id: "civil",
+        label: "El civil",
+        note: "El sí ante la ley",
+      },
     ],
     photos: [
       {
@@ -237,6 +245,17 @@ export const site = {
       palette: [{ name: "Blanco", hex: "#FFFFFF" }],
     },
     note: "El verde claro estará reservado para la corte y el blanco para la novia.",
+  },
+
+  /* Lluvia de sobres. Va como posdata de la carta, no como capítulo:
+     el sitio entero es una carta, y una posdata es un aparte por
+     definición. Primero que no esperamos nada, después el cómo. */
+  gifts: {
+    /** Título accesible; en pantalla no se muestra, la posdata habla sola. */
+    srTitle: "Lluvia de sobres",
+    mark: "P. D.",
+    note: "Tu presencia es todo lo que esperamos. Si además quieres tener un detalle con nosotros, habrá una lluvia de sobres: encontrarás un buzón a la entrada del salón.",
+    signature: "M & J",
   },
 
   rsvp: {
