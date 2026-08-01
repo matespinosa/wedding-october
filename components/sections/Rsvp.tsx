@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 type Entry = { id: number; name: string };
 type Note = { text: string; state: "" | "ok" | "error" };
+type FormErrors = { telefono?: string; asistencia?: string };
 type LookupResponse = {
   matched?: boolean;
   name?: string;
@@ -36,6 +37,11 @@ const normalizeName = (value: string) =>
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
+
+const fieldClassName =
+  "min-h-14 w-full rounded-full border border-gold/45 bg-white/55 px-4 py-3 text-[16px] text-ink outline-none transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/65 hover:border-gold/75 hover:bg-white/80 focus:border-bronze focus:bg-white focus:ring-2 focus:ring-gold/30 md:px-5 md:text-[18px]";
+const fieldErrorClassName =
+  "border-clay/70 bg-white focus:border-clay focus:ring-clay/20";
 
 function SuccessView({
   name,
@@ -53,7 +59,7 @@ function SuccessView({
       initial={{ opacity: 0, y: 26, filter: "blur(8px)" }}
       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       transition={{ duration: 0.9, ease: EASE_OUT }}
-      className="flex min-h-[26rem] flex-col items-center justify-center py-8 text-center"
+      className="flex min-h-[22rem] flex-col items-center justify-center py-6 text-center md:min-h-[26rem] md:py-8"
     >
       <svg viewBox="0 0 76 76" className="size-20 text-gold-deep" aria-hidden>
         <motion.circle
@@ -80,10 +86,10 @@ function SuccessView({
         />
       </svg>
 
-      <h3 className="mt-8 font-serif text-4xl font-light text-ink">
+      <h3 className="mt-7 text-balance font-serif text-3xl font-light text-ink md:mt-8 md:text-4xl">
         ¡Gracias, <span className="italic text-gold-deep">{firstName}</span>!
       </h3>
-      <p className="mx-auto mt-4 max-w-md text-[18px] leading-[1.75] text-ink/65">
+      <p className="mx-auto mt-4 max-w-md text-[16px] leading-[1.7] text-ink/70 md:text-[18px] md:leading-[1.75]">
         {attendance === "si"
           ? "Hemos recibido tu confirmación. Nos vemos el 3 de octubre para celebrar juntos. 🥂"
           : site.rsvp.success.no}
@@ -91,7 +97,7 @@ function SuccessView({
       <button
         type="button"
         onClick={onReset}
-        className="mt-8 text-[13px] uppercase tracking-[0.22em] text-bronze underline-offset-4 transition-colors hover:text-ink hover:underline"
+        className="mt-7 inline-flex min-h-11 items-center justify-center px-3 text-[13px] uppercase tracking-[0.18em] text-bronze underline-offset-4 transition-colors hover:text-ink hover:underline"
       >
         Enviar otra respuesta
       </button>
@@ -115,6 +121,7 @@ export function Rsvp() {
   });
   const [telefono, setTelefono] = useState("");
   const [asistencia, setAsistencia] = useState<"" | "si" | "no">("");
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [note, setNote] = useState<Note>({ text: "", state: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success">("idle");
   const [done, setDone] = useState<{ name: string; attendance: "si" | "no" }>({
@@ -122,6 +129,8 @@ export function Rsvp() {
     attendance: "si",
   });
   const candidateRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const attendanceRef = useRef<HTMLInputElement>(null);
 
   const addEntry = async () => {
     if (lookupStatus === "checking") return;
@@ -129,7 +138,16 @@ export function Rsvp() {
     const name = candidate.replace(/\s+/g, " ").trim();
     if (!name) {
       setLookupNote({
-        text: "Escribe tu nombre y apellido para verificarlo.",
+        text: "Escribe tu primer nombre y tu primer apellido para verificarlo.",
+        state: "error",
+      });
+      candidateRef.current?.focus();
+      return;
+    }
+
+    if (name.split(" ").length < 2) {
+      setLookupNote({
+        text: "Necesitamos tu primer nombre y tu primer apellido.",
         state: "error",
       });
       candidateRef.current?.focus();
@@ -159,7 +177,7 @@ export function Rsvp() {
 
       if (!result.matched) {
         setLookupNote({
-          text: "No encontramos una coincidencia. Revisa el nombre y apellido tal como aparecen en tu invitación.",
+          text: "Esta persona no está dentro de la lista de invitados. Revisa que hayas escrito tu primer nombre y tu primer apellido.",
           state: "error",
         });
         return;
@@ -229,6 +247,7 @@ export function Rsvp() {
     setLookupNote({ text: "", state: "" });
     setTelefono("");
     setAsistencia("");
+    setFormErrors({});
     setNote({ text: "", state: "" });
     setStatus("idle");
   };
@@ -237,7 +256,7 @@ export function Rsvp() {
     event.preventDefault();
 
     if (candidate.trim()) {
-      setNote({
+      setLookupNote({
         text: "Verifica y agrega el nombre que quedó pendiente antes de enviar.",
         state: "error",
       });
@@ -245,15 +264,39 @@ export function Rsvp() {
       return;
     }
 
-    if (entries.length === 0 || !telefono.trim() || !asistencia) {
-      setNote({
-        text: "Agrega al menos una persona, el teléfono y si nos acompañas.",
-        state: "error",
-      });
+    const nextErrors: FormErrors = {};
+    const selectedAttendance = asistencia;
+    if (!telefono.trim()) {
+      nextErrors.telefono = "Escribe un número de teléfono de contacto.";
+    }
+    if (!selectedAttendance) {
+      nextErrors.asistencia = "Selecciona si podrás acompañarnos.";
+    }
+
+    if (
+      entries.length === 0 ||
+      !selectedAttendance ||
+      Object.keys(nextErrors).length > 0
+    ) {
+      setFormErrors(nextErrors);
+      setNote({ text: "", state: "" });
+
+      if (entries.length === 0) {
+        setLookupNote({
+          text: "Verifica y agrega al menos una persona antes de enviar.",
+          state: "error",
+        });
+        candidateRef.current?.focus();
+      } else if (nextErrors.telefono) {
+        phoneRef.current?.focus();
+      } else {
+        attendanceRef.current?.focus();
+      }
       return;
     }
 
     setStatus("sending");
+    setFormErrors({});
     setNote({ text: "", state: "" });
 
     try {
@@ -263,7 +306,7 @@ export function Rsvp() {
         body: JSON.stringify({
           nombres: entries.map((entry) => entry.name),
           telefono: telefono.trim(),
-          asistencia,
+          asistencia: selectedAttendance,
         }),
       });
       const result = (await response.json()) as { ok?: boolean; error?: string };
@@ -274,7 +317,7 @@ export function Rsvp() {
         );
       }
 
-      setDone({ name: entries[0].name, attendance: asistencia });
+      setDone({ name: entries[0].name, attendance: selectedAttendance });
       setStatus("success");
     } catch (error) {
       setStatus("idle");
@@ -289,51 +332,40 @@ export function Rsvp() {
   };
 
   return (
-    <section id="rsvp" className="relative overflow-hidden bg-cream">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="animate-drift absolute right-[-10%] top-[-6%] size-[34rem] rounded-full bg-gold/[0.14] blur-3xl" />
-        <div className="animate-drift-slow absolute bottom-[-12%] left-[-8%] size-[38rem] rounded-full bg-sand/60 blur-3xl" />
-      </div>
-
-      <SectionDivider
-        bg="bg-transparent"
-        fill="fill-ink"
-        flip
-        className="relative z-[1] -mt-px"
-      />
-
-      <div className="relative z-[1] mx-auto grid max-w-6xl gap-14 px-5 pb-28 pt-28 md:px-8 md:pb-40 md:pt-40 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
-        <div className="lg:pt-8">
+    <section id="rsvp" className="relative">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 pb-28 pt-14 md:gap-12 md:px-8 md:pb-40 md:pt-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 xl:gap-20">
+        <div className="lg:pt-6">
           <SectionHeading
             align="left"
+            centerEyebrow
             eyebrow={site.rsvp.eyebrow}
             title={site.rsvp.title}
           />
 
           <Reveal delay={0.3} y={18}>
-            <ul className="mt-8 space-y-4 text-[18px] text-ink/70">
-              <li className="flex items-center gap-3">
+            <ul className="mt-6 space-y-3.5 text-[16px] leading-relaxed text-ink/75 md:mt-8 md:text-[18px]">
+              <li className="flex items-start gap-3 md:items-center">
                 <CalendarHeart
                   size={20}
                   strokeWidth={1.75}
-                  className="shrink-0 text-gold-deep"
+                  className="mt-0.5 shrink-0 text-gold-deep md:mt-0"
                 />
                 {site.date.long}
               </li>
-              <li className="flex items-center gap-3">
+              <li className="flex items-start gap-3 md:items-center">
                 <Clock
                   size={20}
                   strokeWidth={1.75}
-                  className="shrink-0 text-gold-deep"
+                  className="mt-0.5 shrink-0 text-gold-deep md:mt-0"
                 />
                 Ceremonia {site.venues.ceremony.time} · Celebración{" "}
                 {site.venues.reception.time}
               </li>
-              <li className="flex items-center gap-3">
+              <li className="flex items-start gap-3 md:items-center">
                 <MapPin
                   size={20}
                   strokeWidth={1.75}
-                  className="shrink-0 text-gold-deep"
+                  className="mt-0.5 shrink-0 text-gold-deep md:mt-0"
                 />
                 {site.date.city}
               </li>
@@ -341,7 +373,7 @@ export function Rsvp() {
           </Reveal>
 
           <Reveal delay={0.4} y={18}>
-            <p className="mt-8 inline-block rounded-[16px] border border-gold/40 bg-gold/[0.08] px-5 py-2.5 text-[18px] font-medium tracking-normal text-bronze normal-case">
+            <p className="mt-6 max-w-md rounded-xl bg-gold/[0.16] px-5 py-4 text-[16px] font-semibold leading-relaxed text-ink md:mt-8 md:text-[18px]">
               Por favor confírmanos antes del {RSVP_DEADLINE}
             </p>
           </Reveal>
@@ -353,7 +385,7 @@ export function Rsvp() {
         </div>
 
         <Reveal delay={0.15} y={40} blur={false}>
-          <div className="relative rounded-[32px] border border-white/80 bg-white/50 p-7 shadow-[0_60px_150px_-70px_rgba(27,27,27,0.45)] backdrop-blur-2xl md:p-12">
+          <div className="relative rounded-2xl bg-shell p-5 shadow-[0_6px_8px_-6px_rgba(27,27,27,0.22)] sm:p-7 md:p-9 xl:p-10">
             <AnimatePresence mode="wait">
               {status === "success" ? (
                 <SuccessView
@@ -366,40 +398,51 @@ export function Rsvp() {
                   key="form"
                   noValidate
                   onSubmit={onSubmit}
+                  aria-busy={status === "sending"}
                   exit={{ opacity: 0, y: -18, filter: "blur(6px)" }}
                   transition={{ duration: 0.5, ease: EASE_OUT }}
-                  className="space-y-8"
+                  className="space-y-6 md:space-y-7"
                 >
-                  <div>
+                  <div className="space-y-4">
+                    <h3 className="font-serif text-[26px] font-light leading-tight text-ink">
+                      Personas invitadas
+                    </h3>
+
                     <label
                       htmlFor="guest-name"
-                      className="mb-3 block text-[12px] font-medium uppercase tracking-[0.22em] text-bronze"
+                      className="block text-[14px] font-medium text-bronze"
                     >
-                      Nombre y apellido
+                      Primer nombre y primer apellido
                     </label>
 
-                    <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="flex flex-col gap-2.5 sm:flex-row">
                       <input
                         id="guest-name"
                         ref={candidateRef}
                         type="text"
                         autoComplete="off"
                         spellCheck={false}
-                        placeholder="Escribe tu nombre completo"
-                        className="min-w-0 flex-1 rounded-full border border-gold/50 bg-white/20 px-5 py-3.5 text-[18px] text-ink outline-none backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/60 hover:border-gold/75 hover:bg-white/30 focus:border-bronze focus:bg-white/35 focus:ring-2 focus:ring-gold/30"
+                        placeholder="Ej. Mateo Espinosa"
+                        className={cn(
+                          fieldClassName,
+                          "min-w-0 flex-1",
+                          lookupNote.state === "error" && fieldErrorClassName,
+                        )}
                         value={candidate}
                         onChange={(event) => {
                           setCandidate(event.target.value);
                           setLookupNote({ text: "", state: "" });
+                          setNote({ text: "", state: "" });
                         }}
                         onKeyDown={onCandidateKeyDown}
                         aria-describedby="guest-privacy guest-lookup-note"
+                        aria-invalid={lookupNote.state === "error"}
                       />
                       <button
                         type="button"
                         onClick={() => void addEntry()}
                         disabled={lookupStatus === "checking" || !candidate.trim()}
-                        className="inline-flex min-h-[3.5rem] shrink-0 items-center justify-center gap-2 rounded-full bg-bronze px-5 text-[13px] font-medium uppercase tracking-[0.12em] text-cream transition-[background-color,opacity] duration-300 hover:bg-ink disabled:cursor-not-allowed disabled:opacity-45"
+                        className="inline-flex min-h-14 shrink-0 items-center justify-center gap-2 rounded-full bg-bronze px-6 text-[13px] font-medium uppercase tracking-[0.12em] text-cream transition-[background-color,color,transform] duration-300 hover:bg-ink active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-sand disabled:text-ink/55 disabled:hover:bg-sand"
                       >
                         {lookupStatus === "checking" ? (
                           <LoaderCircle
@@ -414,22 +457,27 @@ export function Rsvp() {
                       </button>
                     </div>
 
-                    <p
-                      id="guest-privacy"
-                      className="mt-3 text-[15px] leading-relaxed text-ink/65"
-                    >
-                      La búsqueda es privada: no mostraremos la lista de invitados.
-                    </p>
+                    <div className="space-y-1.5">
+                      <p
+                        id="guest-privacy"
+                        className="text-[14px] leading-relaxed text-ink/70 md:text-[15px]"
+                      >
+                        La búsqueda es privada: no mostraremos la lista de invitados.
+                      </p>
+                      <p className="text-[14px] leading-relaxed text-ink/65 md:text-[15px]">
+                        {site.rsvp.hint}
+                      </p>
+                    </div>
 
                     <div
                       id="guest-lookup-note"
-                      className="min-h-6"
+                      role={lookupNote.state === "error" ? "alert" : "status"}
                       aria-live="polite"
                     >
                       {lookupNote.text && (
                         <p
                           className={cn(
-                            "mt-2 text-[15px]",
+                            "flex items-start gap-1.5 text-[14px] leading-relaxed md:text-[15px]",
                             lookupNote.state === "ok"
                               ? "text-bronze"
                               : lookupNote.state === "error"
@@ -441,7 +489,7 @@ export function Rsvp() {
                             <Check
                               size={15}
                               strokeWidth={2.2}
-                              className="mr-1 inline-block align-[-2px]"
+                              className="mt-0.5 shrink-0"
                               aria-hidden
                             />
                           )}
@@ -456,9 +504,9 @@ export function Rsvp() {
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0 }}
-                          className="mt-4"
+                          className="pt-1"
                         >
-                          <p className="mb-2 text-[14px] font-medium text-ink/70">
+                          <p className="mb-2 text-[14px] font-medium text-ink/75">
                             Personas agregadas ({entries.length})
                           </p>
                           <ul
@@ -474,7 +522,7 @@ export function Rsvp() {
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, x: -8 }}
                                   transition={{ duration: 0.25, ease: EASE_OUT }}
-                                  className="flex items-center gap-3 rounded-[14px] bg-gold/[0.11] px-4 py-3 text-ink"
+                                  className="flex min-h-14 items-center gap-3 rounded-xl bg-gold/[0.12] py-2 pl-3.5 pr-1.5 text-ink"
                                 >
                                   <span
                                     className="flex size-6 shrink-0 items-center justify-center rounded-full bg-bronze text-cream"
@@ -489,7 +537,7 @@ export function Rsvp() {
                                     type="button"
                                     aria-label={`Quitar a ${entry.name}`}
                                     onClick={() => removeEntry(entry.id)}
-                                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-ink/55 transition-colors hover:bg-white/60 hover:text-ink"
+                                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink/60 transition-colors hover:bg-white/80 hover:text-ink active:bg-white"
                                   >
                                     <X size={15} aria-hidden />
                                   </button>
@@ -501,31 +549,60 @@ export function Rsvp() {
                       )}
                     </AnimatePresence>
 
-                    <p className="mt-4 text-[16px] leading-relaxed text-ink/60">
-                      {site.rsvp.hint}
-                    </p>
                   </div>
 
-                  <label className="block">
-                    <span className="mb-3 block text-[12px] font-medium uppercase tracking-[0.22em] text-bronze">
-                      Teléfono
+                  <label className="block space-y-4 border-t border-gold/25 pt-6">
+                    <span className="block font-serif text-[26px] font-light leading-tight text-ink">
+                      Teléfono de contacto
                     </span>
                     <input
+                      id="guest-phone"
+                      ref={phoneRef}
                       type="tel"
                       inputMode="tel"
                       autoComplete="tel"
                       placeholder="+57 300 000 0000"
-                      className="w-full rounded-full border border-gold/50 bg-white/20 px-5 py-3.5 text-[18px] text-ink outline-none backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/60 hover:border-gold/75 hover:bg-white/30 focus:border-bronze focus:bg-white/35 focus:ring-2 focus:ring-gold/30"
+                      className={cn(
+                        fieldClassName,
+                        formErrors.telefono && fieldErrorClassName,
+                      )}
                       value={telefono}
-                      onChange={(event) => setTelefono(event.target.value)}
+                      onChange={(event) => {
+                        setTelefono(event.target.value);
+                        setFormErrors((current) => ({
+                          ...current,
+                          telefono: undefined,
+                        }));
+                        setNote({ text: "", state: "" });
+                      }}
+                      aria-describedby="phone-error"
+                      aria-invalid={Boolean(formErrors.telefono)}
                     />
+                    <AnimatePresence initial={false}>
+                      {formErrors.telefono && (
+                        <motion.span
+                          id="phone-error"
+                          role="alert"
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="block text-[14px] leading-relaxed text-clay md:text-[15px]"
+                        >
+                          {formErrors.telefono}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </label>
 
-                  <fieldset>
-                    <legend className="mb-3 text-[15px] font-medium tracking-normal text-bronze normal-case">
+                  <fieldset
+                    className="border-t border-gold/25 pt-6"
+                    aria-describedby="attendance-error"
+                    aria-invalid={Boolean(formErrors.asistencia)}
+                  >
+                    <legend className="mb-4 font-serif text-[26px] font-light leading-tight text-ink">
                       Confirmar asistencia
                     </legend>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                       {(
                         [
                           { value: "si", label: "Sí, allí estaré" },
@@ -534,26 +611,49 @@ export function Rsvp() {
                       ).map((option) => (
                         <label key={option.value} className="cursor-pointer">
                           <input
+                            ref={option.value === "si" ? attendanceRef : undefined}
                             type="radio"
                             name="asistencia"
                             value={option.value}
                             checked={asistencia === option.value}
-                            onChange={() => setAsistencia(option.value)}
+                            onChange={() => {
+                              setAsistencia(option.value);
+                              setFormErrors((current) => ({
+                                ...current,
+                                asistencia: undefined,
+                              }));
+                              setNote({ text: "", state: "" });
+                            }}
                             className="peer sr-only"
+                            aria-invalid={Boolean(formErrors.asistencia)}
                           />
-                          <span className="flex items-center justify-center rounded-full border border-gold/50 bg-white/20 px-4 py-4 text-center text-[16px] text-ink/75 backdrop-blur-sm transition-all duration-500 hover:border-gold/75 hover:bg-white/30 peer-checked:border-bronze peer-checked:bg-bronze peer-checked:text-cream peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold">
+                          <span className="flex h-full min-h-16 items-center justify-center rounded-xl border border-gold/45 bg-white/55 px-3 py-3 text-center text-[15px] leading-snug text-ink/80 transition-[border-color,background-color,color,transform] duration-300 hover:border-gold/80 hover:bg-white/85 active:scale-[0.98] peer-checked:border-bronze peer-checked:bg-bronze peer-checked:text-cream peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold sm:rounded-full sm:px-4 sm:text-[16px]">
                             {option.label}
                           </span>
                         </label>
                       ))}
                     </div>
+                    <AnimatePresence initial={false}>
+                      {formErrors.asistencia && (
+                        <motion.p
+                          id="attendance-error"
+                          role="alert"
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="mt-3 text-[14px] leading-relaxed text-clay md:text-[15px]"
+                        >
+                          {formErrors.asistencia}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
                   </fieldset>
 
                   <motion.button
                     type="submit"
                     disabled={status === "sending"}
                     whileTap={{ scale: 0.98 }}
-                    className="group relative w-full overflow-hidden rounded-full bg-ink py-4.5 text-[13px] font-medium uppercase tracking-[0.22em] text-cream transition-opacity duration-300 disabled:cursor-wait disabled:opacity-80"
+                    className="group relative min-h-14 w-full overflow-hidden rounded-full bg-ink px-4 py-3 text-[12px] font-medium uppercase tracking-[0.12em] text-cream transition-opacity duration-300 disabled:cursor-wait disabled:opacity-75 sm:px-5 sm:text-[13px] sm:tracking-[0.18em] md:tracking-[0.22em]"
                   >
                     <span
                       aria-hidden
@@ -561,10 +661,13 @@ export function Rsvp() {
                     />
                     <span className="relative z-10 flex items-center justify-center gap-3 py-0.5">
                       {status === "sending" ? (
-                        <span
-                          aria-label="Enviando"
-                          className="size-4 animate-spin rounded-full border border-cream/30 border-t-cream"
-                        />
+                        <>
+                          <span
+                            aria-hidden
+                            className="size-4 animate-spin rounded-full border border-cream/30 border-t-cream"
+                          />
+                          <span>Enviando</span>
+                        </>
                       ) : (
                         <>
                           Enviar confirmación
@@ -585,7 +688,7 @@ export function Rsvp() {
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="text-center text-[15px] text-clay"
+                        className="rounded-xl bg-clay/[0.08] px-4 py-3 text-center text-[14px] leading-relaxed text-clay md:text-[15px]"
                       >
                         {note.text}
                       </motion.p>
