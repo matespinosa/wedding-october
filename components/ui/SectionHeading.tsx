@@ -9,6 +9,7 @@ type Props = {
   title: string;
   description?: string;
   align?: "center" | "left";
+  centerEyebrow?: boolean;
   dark?: boolean;
   className?: string;
 };
@@ -19,6 +20,7 @@ export function SectionHeading({
   title,
   description,
   align = "center",
+  centerEyebrow = false,
   dark = false,
   className,
 }: Props) {
@@ -29,7 +31,7 @@ export function SectionHeading({
         <p
           className={cn(
             "flex items-center gap-4 text-[12px] font-medium uppercase tracking-[0.34em]",
-            centered && "justify-center",
+            (centered || centerEyebrow) && "justify-center",
             dark ? "text-gold" : "text-bronze",
           )}
         >

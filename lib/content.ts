@@ -262,7 +262,7 @@ export const site = {
     eyebrow: "Confirma tu asistencia",
     title: "¿Nos acompañas?",
     intro: "Tu presencia es nuestro mejor regalo. Confírmanos tu asistencia.",
-    hint: "Escribe el nombre completo tal como aparece en la invitación. Si no coincide, escríbenos para ayudarte.",
+    hint: "Escribe tu primer nombre y tu primer apellido tal como aparecen en la invitación. Si no coinciden, escríbenos para ayudarte.",
     success: {
       no: "Gracias por avisarnos. Te vamos a extrañar, pero sabemos que estarás con nosotros de corazón.",
     },
