@@ -1,10 +1,11 @@
 import "server-only";
 
-const LEGACY_SCRIPT_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbyBBA0C4XRj9DaHfyZIt_JEfAUr8lkMNuV-8TBKR7OJIVIrr9q98fDEQyO5EWFiv0tgmA/exec";
+/** Implementación del Apps Script privado (doGet nunca devuelve la lista completa). */
+const DEFAULT_SCRIPT_ENDPOINT =
+  "https://script.google.com/macros/s/AKfycby00XguFKlZ5awiyhvNAQM5XJACj5JURm2l6kZ3p4c7vajVOcGCsuueG-2mTEY7mT6zyA/exec";
 
 const scriptEndpoint =
-  process.env.RSVP_SCRIPT_URL?.trim() || LEGACY_SCRIPT_ENDPOINT;
+  process.env.RSVP_SCRIPT_URL?.trim() || DEFAULT_SCRIPT_ENDPOINT;
 
 type LegacyGuestData = {
   names?: unknown;
@@ -25,6 +26,8 @@ export type GuestLookup = {
 
 export type RsvpRecord = {
   nombres: string[];
+  /** Paralelo a `nombres`: "carne" | "pollo", vacío si no asiste. */
+  menus: string[];
   nombre: string;
   telefono: string;
   asistencia: "si" | "no";

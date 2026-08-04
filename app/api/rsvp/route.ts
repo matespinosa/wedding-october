@@ -51,30 +51,41 @@ export async function POST(request: NextRequest) {
   const rawNames = Array.isArray(data.nombres)
     ? data.nombres.map(String).map((name) => name.replace(/\s+/g, " ").trim())
     : [];
+  const rawMenus = Array.isArray(data.menus) ? data.menus.map(String) : [];
   const telefono = typeof data.telefono === "string" ? data.telefono.trim() : "";
   const asistencia = data.asistencia;
-  const uniqueNames = rawNames.filter(
-    (name, index, names) =>
-      name &&
-      names.findIndex(
-        (candidate) =>
-          normalizeGuestName(candidate) === normalizeGuestName(name),
-      ) === index,
-  );
+
+  // Nombre y menú viajan como listas paralelas: se deduplican juntos para que
+  // cada persona conserve el plato que eligió.
+  const guests = rawNames
+    .map((name, index) => ({ name, menu: rawMenus[index] ?? "" }))
+    .filter(
+      (guest, index, all) =>
+        guest.name &&
+        all.findIndex(
+          (candidate) =>
+            normalizeGuestName(candidate.name) === normalizeGuestName(guest.name),
+        ) === index,
+    );
 
   if (
-    uniqueNames.length === 0 ||
-    uniqueNames.length > 10 ||
-    uniqueNames.some((name) => name.length > 120) ||
+    guests.length === 0 ||
+    guests.length > 10 ||
+    guests.some((guest) => guest.name.length > 120) ||
     !telefono ||
     telefono.length > 40 ||
-    (asistencia !== "si" && asistencia !== "no")
+    (asistencia !== "si" && asistencia !== "no") ||
+    // El menú solo se pide a quienes asisten.
+    (asistencia === "si" &&
+      guests.some((guest) => guest.menu !== "carne" && guest.menu !== "pollo"))
   ) {
     return NextResponse.json(
       { error: "Completa correctamente todos los campos." },
       { status: 400 },
     );
   }
+
+  const uniqueNames = guests.map((guest) => guest.name);
 
   try {
     // Se vuelve a validar al guardar para que no sea posible saltarse el formulario.
@@ -96,6 +107,7 @@ export async function POST(request: NextRequest) {
     const record: RsvpRecord = {
       nombres: canonicalNames,
       nombre: canonicalNames.join(", "),
+      menus: guests.map((guest) => (asistencia === "si" ? guest.menu : "")),
       telefono,
       asistencia,
       ts: new Date().toISOString(),

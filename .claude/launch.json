@@ -4,8 +4,11 @@
   "configurations": [
     {
       "name": "wedding-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "source \"${NVM_DIR:-$HOME/.nvm}/nvm.sh\" && nvm use && npm run dev"
+      ],
       "port": 3000,
       "autoPort": true
     }

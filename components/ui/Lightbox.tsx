@@ -35,13 +35,14 @@ export function Lightbox({ items, index, onIndexChange, onClose }: Props) {
   const direction = useRef(1);
   const touchStartX = useRef<number | null>(null);
 
-  const [mounted, setMounted] = useState(false);
+  /* Se resuelve ya en el primer render del cliente. Con `useState(false)` +
+     efecto, el primer render devolvía null y los refs llegaban vacíos a los
+     layout effects: la animación de entrada y el foco inicial no ocurrían. */
+  const [mounted] = useState(() => typeof document !== "undefined");
   const { stop, start } = useLenis();
 
   const photo = items[index];
   const total = items.length;
-
-  useEffect(() => setMounted(true), []);
 
   /* Bloquea el scroll de la página mientras el visor está abierto. */
   useEffect(() => {
@@ -87,27 +88,25 @@ export function Lightbox({ items, index, onIndexChange, onClose }: Props) {
     [index, onIndexChange, total],
   );
 
-  /* Entrada del visor. */
+  /* Entrada del fondo. Siempre `fromTo`: `from` toma el estado actual como
+     destino, así que si el efecto se vuelve a ejecutar (StrictMode monta,
+     desmonta y vuelve a montar) anima de 0 a 0 y deja el elemento invisible. */
   useLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
     const ctx = gsap.context(() => {
-      gsap.from(backdropRef.current, { opacity: 0, duration: 0.34, ease: "power2.out" });
-      gsap.from(figureRef.current, {
-        opacity: 0,
-        scale: 0.94,
-        y: 22,
-        duration: 0.6,
-        ease: "expo.out",
-      });
+      gsap.fromTo(
+        backdropRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.34, ease: "power2.out" },
+      );
     }, rootRef);
     return () => ctx.revert();
-    // Solo al montar: los cambios de foto se animan aparte.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Cambio de foto: entra desplazándose desde el lado correspondiente. */
+  /* La figura la anima un único efecto — al abrir y en cada cambio de foto —
+     para que no haya dos tweens disputándose las mismas propiedades. */
   useLayoutEffect(() => {
     const figure = figureRef.current;
     if (!figure || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -116,8 +115,8 @@ export function Lightbox({ items, index, onIndexChange, onClose }: Props) {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         figure,
-        { opacity: 0, x: direction.current * 34 },
-        { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" },
+        { opacity: 0, scale: 0.96, x: direction.current * 34 },
+        { opacity: 1, scale: 1, x: 0, duration: 0.5, ease: "expo.out" },
       );
     }, figure);
     return () => ctx.revert();

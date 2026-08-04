@@ -2,7 +2,7 @@
  * Backend privado del RSVP en Google Sheets.
  *
  * Estructura de la hoja:
- *   - Pestaña 1: respuestas (Fecha | Nombre | Teléfono | Asistencia).
+ *   - Pestaña 1: respuestas (Fecha | Nombre | Teléfono | Asistencia | Menú).
  *   - Pestaña 2: lista de invitados (un nombre por fila, sin encabezado).
  *
  * Publicación:
@@ -16,11 +16,25 @@
  * completa y `doPost` vuelve a validar cada persona antes de escribir.
  */
 
+var ENCABEZADOS = ['Fecha', 'Nombre', 'Teléfono', 'Asistencia', 'Menú'];
+
 function prepararEncabezados() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['Fecha', 'Nombre', 'Teléfono', 'Asistencia']);
+    sheet.appendRow(ENCABEZADOS);
+    return;
   }
+  // Hojas creadas antes del menú: agrega la columna que falta.
+  if (sheet.getLastColumn() < ENCABEZADOS.length) {
+    sheet.getRange(1, ENCABEZADOS.length).setValue(ENCABEZADOS[ENCABEZADOS.length - 1]);
+  }
+}
+
+function formatearMenu(value) {
+  var menu = String(value || '').trim().toLowerCase();
+  if (menu === 'carne') return 'Carne';
+  if (menu === 'pollo') return 'Pollo';
+  return '';
 }
 
 function normalizarNombre(value) {
@@ -116,15 +130,18 @@ function doPost(e) {
       Array.isArray(data.nombres) && data.nombres.length
         ? data.nombres
         : [data.nombre || ''];
+    var rawMenus = Array.isArray(data.menus) ? data.menus : [];
     var seen = {};
     var requestedNames = [];
+    var requestedMenus = [];
 
-    rawNames.forEach(function (value) {
+    rawNames.forEach(function (value, index) {
       var name = String(value || '').replace(/\s+/g, ' ').trim();
       var normalized = normalizarNombre(name);
       if (name && !seen[normalized]) {
         seen[normalized] = true;
         requestedNames.push(name);
+        requestedMenus.push(formatearMenu(rawMenus[index]));
       }
     });
 
@@ -140,6 +157,18 @@ function doPost(e) {
       return responderJson({
         ok: false,
         error: 'Faltan nombres, teléfono o asistencia.',
+      });
+    }
+
+    if (
+      asistencia === 'Sí asiste' &&
+      requestedMenus.some(function (menu) {
+        return !menu;
+      })
+    ) {
+      return responderJson({
+        ok: false,
+        error: 'Falta la preferencia de menú de alguna persona.',
       });
     }
 
@@ -171,15 +200,15 @@ function doPost(e) {
 
     var responseSheet = ss.getSheets()[0];
     if (responseSheet.getLastRow() === 0) {
-      responseSheet.appendRow(['Fecha', 'Nombre', 'Teléfono', 'Asistencia']);
+      responseSheet.appendRow(ENCABEZADOS);
     }
 
     var now = new Date();
-    var rows = canonicalNames.map(function (name) {
-      return [now, name, telefono, asistencia];
+    var rows = canonicalNames.map(function (name, index) {
+      return [now, name, telefono, asistencia, requestedMenus[index] || ''];
     });
     responseSheet
-      .getRange(responseSheet.getLastRow() + 1, 1, rows.length, 4)
+      .getRange(responseSheet.getLastRow() + 1, 1, rows.length, ENCABEZADOS.length)
       .setValues(rows);
     SpreadsheetApp.flush();
 

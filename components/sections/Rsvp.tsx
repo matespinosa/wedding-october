@@ -11,7 +11,13 @@ import {
   Send,
   X,
 } from "lucide-react";
-import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type RefObject,
+} from "react";
 import { FloralBranch } from "@/components/ui/Florals";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionDivider } from "@/components/ui/SectionDivider";
@@ -20,9 +26,10 @@ import { RSVP_DEADLINE, site } from "@/lib/content";
 import { EASE_OUT, EASE_SOFT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-type Entry = { id: number; name: string };
+type MenuChoice = "" | "carne" | "pollo";
+type Entry = { id: number; name: string; menu: MenuChoice };
 type Note = { text: string; state: "" | "ok" | "error" };
-type FormErrors = { telefono?: string; asistencia?: string };
+type FormErrors = { telefono?: string; asistencia?: string; menu?: string };
 type LookupResponse = {
   matched?: boolean;
   name?: string;
@@ -42,6 +49,75 @@ const fieldClassName =
   "min-h-14 w-full rounded-full border border-gold/45 bg-white/55 px-4 py-3 text-[16px] text-ink outline-none transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-ink/65 hover:border-gold/75 hover:bg-white/80 focus:border-bronze focus:bg-white focus:ring-2 focus:ring-gold/30 md:px-5 md:text-[18px]";
 const fieldErrorClassName =
   "border-clay/70 bg-white focus:border-clay focus:ring-clay/20";
+
+const MENU_OPTIONS = [
+  { value: "carne", label: "Carne" },
+  { value: "pollo", label: "Pollo" },
+] as const;
+
+const ATTENDANCE_OPTIONS = [
+  { value: "si", label: "Sí, allí estaré" },
+  { value: "no", label: "No podré asistir" },
+] as const;
+
+/**
+ * Control de selección única.
+ *
+ * Los botones del formulario (Agregar, Enviar) son píldoras rellenas; estas
+ * opciones NO deben parecerse a ellos o se leen como acciones y no como una
+ * elección. De ahí las esquinas cuadradas, el punto de radio explícito y un
+ * seleccionado que tiñe la superficie en vez de rellenarla.
+ */
+function ChoiceOption({
+  name,
+  value,
+  label,
+  checked,
+  invalid,
+  inputRef,
+  onSelect,
+}: {
+  name: string;
+  value: string;
+  label: string;
+  checked: boolean;
+  invalid?: boolean;
+  inputRef?: RefObject<HTMLInputElement | null>;
+  onSelect: () => void;
+}) {
+  return (
+    <label className="group cursor-pointer">
+      <input
+        ref={inputRef}
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={onSelect}
+        className="sr-only"
+        aria-invalid={invalid}
+      />
+      <span
+        className={cn(
+          "flex min-h-14 items-center gap-3 rounded-xl border bg-white/55 px-4 py-3 text-[15px] leading-snug text-ink/80 sm:text-[16px]",
+          "transition-[border-color,background-color,color] duration-300",
+          "hover:bg-white/85",
+          invalid ? "border-clay/70" : "border-gold/45 hover:border-gold/80",
+          "group-has-[:checked]:border-bronze group-has-[:checked]:bg-gold/[0.16] group-has-[:checked]:font-medium group-has-[:checked]:text-ink",
+          "group-has-[:focus-visible]:outline group-has-[:focus-visible]:outline-2 group-has-[:focus-visible]:outline-offset-2 group-has-[:focus-visible]:outline-gold",
+        )}
+      >
+        <span
+          aria-hidden
+          className="grid size-[18px] shrink-0 place-items-center rounded-full border border-gold/70 bg-white transition-colors duration-300 group-has-[:checked]:border-bronze"
+        >
+          <span className="size-2.5 scale-0 rounded-full bg-bronze transition-transform duration-300 ease-out-expo group-has-[:checked]:scale-100" />
+        </span>
+        {label}
+      </span>
+    </label>
+  );
+}
 
 function SuccessView({
   name,
@@ -131,6 +207,7 @@ export function Rsvp() {
   const candidateRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const attendanceRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLInputElement>(null);
 
   const addEntry = async () => {
     if (lookupStatus === "checking") return;
@@ -206,7 +283,7 @@ export function Rsvp() {
 
       setEntries((current) => [
         ...current,
-        { id: nextId.current++, name: canonicalName },
+        { id: nextId.current++, name: canonicalName, menu: "" },
       ]);
       setCandidate("");
       setLookupNote({
@@ -231,7 +308,16 @@ export function Rsvp() {
   const removeEntry = (id: number) => {
     setEntries((current) => current.filter((entry) => entry.id !== id));
     setLookupNote({ text: "", state: "" });
+    setFormErrors((current) => ({ ...current, menu: undefined }));
     candidateRef.current?.focus();
+  };
+
+  const setEntryMenu = (id: number, menu: MenuChoice) => {
+    setEntries((current) =>
+      current.map((entry) => (entry.id === id ? { ...entry, menu } : entry)),
+    );
+    setFormErrors((current) => ({ ...current, menu: undefined }));
+    setNote({ text: "", state: "" });
   };
 
   const onCandidateKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -272,6 +358,12 @@ export function Rsvp() {
     if (!selectedAttendance) {
       nextErrors.asistencia = "Selecciona si podrás acompañarnos.";
     }
+    if (selectedAttendance === "si" && entries.some((entry) => !entry.menu)) {
+      nextErrors.menu =
+        entries.length > 1
+          ? "Elige el plato de cada persona."
+          : "Elige tu preferencia de plato.";
+    }
 
     if (
       entries.length === 0 ||
@@ -289,8 +381,10 @@ export function Rsvp() {
         candidateRef.current?.focus();
       } else if (nextErrors.telefono) {
         phoneRef.current?.focus();
-      } else {
+      } else if (nextErrors.asistencia) {
         attendanceRef.current?.focus();
+      } else {
+        menuRef.current?.focus();
       }
       return;
     }
@@ -305,6 +399,9 @@ export function Rsvp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombres: entries.map((entry) => entry.name),
+          menus: entries.map((entry) =>
+            selectedAttendance === "si" ? entry.menu : "",
+          ),
           telefono: telefono.trim(),
           asistencia: selectedAttendance,
         }),
@@ -330,6 +427,8 @@ export function Rsvp() {
       });
     }
   };
+
+  const firstMissingMenuId = entries.find((entry) => !entry.menu)?.id;
 
   return (
     <section id="rsvp" className="relative">
@@ -539,10 +638,16 @@ export function Rsvp() {
 
                   </div>
 
-                  <label className="block space-y-4 border-t border-gold/25 pt-6">
-                    <span className="block font-serif text-[26px] font-light leading-tight text-ink">
+                  {/* El `label` va solo sobre el título: envolviendo también el
+                      input y el error, el nombre accesible del campo acababa
+                      arrastrando el placeholder y el mensaje de validación. */}
+                  <div className="space-y-4 border-t border-gold/25 pt-6">
+                    <label
+                      htmlFor="guest-phone"
+                      className="block font-serif text-[26px] font-light leading-tight text-ink"
+                    >
                       Teléfono de contacto
-                    </span>
+                    </label>
                     <input
                       id="guest-phone"
                       ref={phoneRef}
@@ -580,7 +685,7 @@ export function Rsvp() {
                         </motion.span>
                       )}
                     </AnimatePresence>
-                  </label>
+                  </div>
 
                   <fieldset
                     className="border-t border-gold/25 pt-6"
@@ -590,35 +695,29 @@ export function Rsvp() {
                     <legend className="mb-4 font-serif text-[26px] font-light leading-tight text-ink">
                       Confirmar asistencia
                     </legend>
-                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                      {(
-                        [
-                          { value: "si", label: "Sí, allí estaré" },
-                          { value: "no", label: "No podré asistir" },
-                        ] as const
-                      ).map((option) => (
-                        <label key={option.value} className="cursor-pointer">
-                          <input
-                            ref={option.value === "si" ? attendanceRef : undefined}
-                            type="radio"
-                            name="asistencia"
-                            value={option.value}
-                            checked={asistencia === option.value}
-                            onChange={() => {
-                              setAsistencia(option.value);
-                              setFormErrors((current) => ({
-                                ...current,
-                                asistencia: undefined,
-                              }));
-                              setNote({ text: "", state: "" });
-                            }}
-                            className="peer sr-only"
-                            aria-invalid={Boolean(formErrors.asistencia)}
-                          />
-                          <span className="flex h-full min-h-16 items-center justify-center rounded-xl border border-gold/45 bg-white/55 px-3 py-3 text-center text-[15px] leading-snug text-ink/80 transition-[border-color,background-color,color,transform] duration-300 hover:border-gold/80 hover:bg-white/85 active:scale-[0.98] peer-checked:border-bronze peer-checked:bg-bronze peer-checked:text-cream peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold sm:rounded-full sm:px-4 sm:text-[16px]">
-                            {option.label}
-                          </span>
-                        </label>
+                    {/* Etiquetas largas: en móvil apiladas, en fila desde sm. */}
+                    <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+                      {ATTENDANCE_OPTIONS.map((option) => (
+                        <ChoiceOption
+                          key={option.value}
+                          name="asistencia"
+                          value={option.value}
+                          label={option.label}
+                          checked={asistencia === option.value}
+                          invalid={Boolean(formErrors.asistencia)}
+                          inputRef={
+                            option.value === "si" ? attendanceRef : undefined
+                          }
+                          onSelect={() => {
+                            setAsistencia(option.value);
+                            setFormErrors((current) => ({
+                              ...current,
+                              asistencia: undefined,
+                              menu: undefined,
+                            }));
+                            setNote({ text: "", state: "" });
+                          }}
+                        />
                       ))}
                     </div>
                     <AnimatePresence initial={false}>
@@ -636,6 +735,82 @@ export function Rsvp() {
                       )}
                     </AnimatePresence>
                   </fieldset>
+
+                  <AnimatePresence initial={false}>
+                    {asistencia === "si" && entries.length > 0 && (
+                      <motion.div
+                        key="menu"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.4, ease: EASE_OUT }}
+                        className="overflow-hidden"
+                      >
+                        <div className="border-t border-gold/25 pt-6">
+                          <h3 className="font-serif text-[26px] font-light leading-tight text-ink">
+                            Preferencia de menú
+                          </h3>
+                          <p className="mt-2 text-[15px] leading-relaxed text-ink/70 md:text-[16px]">
+                            Elige el plato principal de cada persona.
+                          </p>
+
+                          <div className="mt-4 space-y-4">
+                            {entries.map((entry) => (
+                              <fieldset
+                                key={entry.id}
+                                aria-describedby={
+                                  formErrors.menu ? "menu-error" : undefined
+                                }
+                              >
+                                <legend className="mb-2 text-[14px] font-medium text-bronze">
+                                  {entry.name}
+                                </legend>
+                                {/* Etiquetas cortas: dos columnas incluso en móvil. */}
+                                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                                  {MENU_OPTIONS.map((option) => (
+                                    <ChoiceOption
+                                      key={option.value}
+                                      name={`menu-${entry.id}`}
+                                      value={option.value}
+                                      label={option.label}
+                                      checked={entry.menu === option.value}
+                                      invalid={Boolean(
+                                        formErrors.menu && !entry.menu,
+                                      )}
+                                      inputRef={
+                                        firstMissingMenuId === entry.id &&
+                                        option.value === "carne"
+                                          ? menuRef
+                                          : undefined
+                                      }
+                                      onSelect={() =>
+                                        setEntryMenu(entry.id, option.value)
+                                      }
+                                    />
+                                  ))}
+                                </div>
+                              </fieldset>
+                            ))}
+                          </div>
+
+                          <AnimatePresence initial={false}>
+                            {formErrors.menu && (
+                              <motion.p
+                                id="menu-error"
+                                role="alert"
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="mt-3 text-[14px] leading-relaxed text-clay md:text-[15px]"
+                              >
+                                {formErrors.menu}
+                              </motion.p>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   <motion.button
                     type="submit"
