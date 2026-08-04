@@ -254,6 +254,11 @@ export function EnvelopeGate({
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const k = reduced ? 0.001 : 1;
+    /* Los solapes también van en la escala `k`: con la apertura instantánea,
+       un "-=0.55" literal cae en tiempo negativo y GSAP nunca ejecuta lo que
+       haya ahí. Eso dejaba el hero sin su señal de arranque —foto, marco y
+       botón en opacity 0— en cualquier móvil con «Reducir movimiento». */
+    const ov = (seconds: number) => `-=${seconds * k}`;
 
     idleRef.current.forEach((t) => t.kill());
     idleRef.current = [];
@@ -267,6 +272,10 @@ export function EnvelopeGate({
     const tl = gsap.timeline({
       defaults: { ease: "power3.out" },
       onComplete: () => {
+        /* Red de seguridad: pase lo que pase con la línea de tiempo, cuando
+           el sobre ya no está el hero tiene que estar despierto. Es
+           idempotente. */
+        onOpenRef.current();
         gsap.set([stageWrapRef.current, stageLayerRef.current], {
           clearProps: "all",
         });
@@ -311,12 +320,12 @@ export function EnvelopeGate({
           ease: "power3.inOut",
           onUpdate: renderFlap,
         },
-        "-=0.32",
+        ov(0.32),
       )
       /* Pasado el ecuador del giro, la página pasa delante del sobre y
          despierta: el hero ya está animándose mientras asoma. */
-      .set(stageLayerRef.current, { zIndex: 84 }, "-=0.55")
-      .add(() => onOpenRef.current(), "-=0.55")
+      .set(stageLayerRef.current, { zIndex: 84 }, ov(0.55))
+      .add(() => onOpenRef.current(), ov(0.55))
       /* Se desliza fuera del sobre… */
       .to(
         st,
@@ -326,18 +335,18 @@ export function EnvelopeGate({
           ease: "power3.out",
           onUpdate: render,
         },
-        "-=0.5",
+        ov(0.5),
       )
       /* …y se expande hasta ocupar la pantalla */
       .to(
         st,
         { p: 1, duration: 1.25 * k, ease: "power2.inOut", onUpdate: render },
-        "-=0.35",
+        ov(0.35),
       )
       .to(
         [veilRef.current, backLayerRef.current, frontLayerRef.current],
         { opacity: 0, duration: 0.8 * k, ease: "power2.inOut" },
-        "-=1.05",
+        ov(1.05),
       );
   }, [measure, render, renderFlap, scrollTo, start]);
 

@@ -32,12 +32,37 @@ const DUST = Array.from({ length: 14 }, () => ({
   opacity: 0.25 + rand() * 0.4,
 }));
 
-/* Arco: radios en % para que WebKit no colapse el clip cuando el
-   contenedor es más estrecho que un radio en px (fallo típico en iOS). */
-const ARCH_CLIP = "inset(0 round 50% 50% 22px 22px)";
+/* ————————————————————————————————————————————————
+   Geometría del arco.
 
+   Todo cuelga de `--arch-w`: el alto conserva la proporción 10/13 y el
+   marco dorado se dibuja concéntrico a la foto, de modo que la calle
+   dorada mide exactamente lo mismo en la curva, en los costados y en la
+   base.
+
+   La clave: el arco superior es un semicírculo real — radio horizontal
+   50% del ancho y radio vertical ese mismo ancho / 2. Usar 50% también
+   en el eje vertical lo convierte en una elipse apuntada (alto / 2), que
+   era justo por lo que la foto y el marco no coincidían.
+   ———————————————————————————————————————————————— */
+const ARCH_VARS = {
+  "--arch-w": "min(80vw, calc(clamp(300px, 45vh, 500px) * 10 / 13))",
+  "--arch-h": "calc(var(--arch-w) * 13 / 10)",
+  "--arch-gap": "clamp(12px, 3.2vw, 18px)",
+  "--arch-foot": "20px",
+} as React.CSSProperties;
+
+/** Contorno del arco, desplazado `grow` hacia afuera (`0px` = la foto). */
+const archRadius = (grow: string) => {
+  const crown = `calc(var(--arch-w) / 2 + ${grow})`;
+  const foot = `calc(var(--arch-foot) + ${grow})`;
+  return `50% 50% ${foot} ${foot} / ${crown} ${crown} ${foot} ${foot}`;
+};
+
+/* El tamaño de los nombres mira también a la altura: en apaisado, `13.5vw`
+   los disparaba al máximo mientras el arco se quedaba en su mínimo. */
 const nameClass =
-  "relative z-20 block font-serif text-[clamp(3.6rem,13.5vw,6.75rem)] font-light leading-[0.95] tracking-[-0.02em] text-ink";
+  "relative z-20 block font-serif text-[clamp(3.4rem,min(13.5vw,22vh),6.75rem)] font-light leading-[0.95] tracking-[-0.005em] text-ink";
 
 export function Hero() {
   const ready = useSiteReady();
@@ -148,77 +173,114 @@ export function Hero() {
             />
 
             {/* Arco con la foto real */}
-            <span className="relative block">
-              {/* Marco dorado desfasado */}
+            <span className="relative block" style={ARCH_VARS}>
+              {/* Marco dorado: mismo centro de circunferencia que la foto,
+                  radios crecidos en --arch-gap. Al ser concéntrico, la
+                  separación es idéntica en todo el contorno. */}
               <motion.span
+                aria-hidden
                 initial={{ opacity: 0, scale: 0.93 }}
                 animate={ready ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 1, ease: EASE_OUT, delay: 1.75 }}
-                className="absolute -inset-3 block rounded-b-[32px] rounded-t-full border border-gold/45 md:-inset-4"
+                style={{
+                  inset: "calc(var(--arch-gap) * -1)",
+                  borderRadius: archRadius("var(--arch-gap)"),
+                }}
+                className="pointer-events-none absolute block border border-gold/45"
               />
 
-              {/* Reveal con opacity/scale (no clip-path animado): Safari/iOS
-                  falla al interpolar inset(... round 320px) cuando el arco
-                  móvil es más estrecho que ese radio y la foto queda en
-                  blanco aunque el hueco del layout siga ahí. */}
+              {/* El reveal (opacity/scale) vive en un envoltorio propio y el
+                  recorte del arco en un elemento sin animación: WebKit deja
+                  la foto en blanco cuando el clip y la animación comparten
+                  nodo. El recorte es border-radius + overflow, no clip-path,
+                  y si algún motor fallara la foto saldría rectangular pero
+                  nunca vacía. translateZ + máscara opaca fuerzan a Safari a
+                  recortar también las capas con transform de dentro. */}
               <motion.span
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={ready ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 1.5, ease: EASE_OUT, delay: 1.05 }}
-                style={{
-                  clipPath: ARCH_CLIP,
-                  WebkitClipPath: ARCH_CLIP,
-                  width:
-                    "min(86vw, calc(clamp(320px, 46vh, 500px) * 10 / 13))",
-                }}
-                className="relative isolate z-0 block aspect-[10/13] h-[clamp(320px,46vh,500px)] max-w-[86vw] overflow-hidden rounded-b-[22px] rounded-t-full bg-sand/40"
+                style={{ width: "var(--arch-w)", height: "var(--arch-h)" }}
+                className="relative z-0 block"
               >
-                {/* Foto con zoom de asentamiento (framer) + parallax GSAP interno */}
-                <motion.span
-                  initial={{ scale: 1.18 }}
-                  animate={ready ? { scale: 1.06 } : {}}
-                  transition={{ duration: 2.2, ease: EASE_OUT, delay: 1.05 }}
-                  className="absolute inset-[-6%] block"
-                >
-                  <span ref={photoRef} className="absolute inset-[-12%] block">
-                    <Image
-                      src="/images/hero.jpg"
-                      alt="Mateo y Julieth"
-                      fill
-                      priority
-                      sizes="(max-width: 768px) 86vw, 420px"
-                      className="object-cover object-[50%_35%]"
-                    />
-                  </span>
-                </motion.span>
-
-                {/* Velos crema arriba y abajo: funden la foto con el lienzo
-                    y garantizan la legibilidad de los nombres que la cruzan */}
                 <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,238,0.5),rgba(247,243,238,0.06)_26%,rgba(247,243,238,0.04)_62%,rgba(247,243,238,0.62))]"
-                />
+                  style={{
+                    borderRadius: archRadius("0px"),
+                    transform: "translateZ(0)",
+                    WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+                  }}
+                  className="absolute inset-0 block overflow-hidden bg-[rgba(221,210,196,0.45)]"
+                >
+                  {/* Foto con zoom de asentamiento (framer) + parallax GSAP interno */}
+                  <motion.span
+                    initial={{ scale: 1.18 }}
+                    animate={ready ? { scale: 1.06 } : {}}
+                    transition={{ duration: 2.2, ease: EASE_OUT, delay: 1.05 }}
+                    className="absolute inset-[-6%] block"
+                  >
+                    <span ref={photoRef} className="absolute inset-[-12%] block">
+                      <Image
+                        src="/images/hero.jpg"
+                        alt="Mateo y Julieth"
+                        fill
+                        priority
+                        sizes="(max-width: 768px) 100vw, 520px"
+                        className="object-cover object-[50%_35%]"
+                      />
+                    </span>
+                  </motion.span>
+
+                  {/* Velos crema simétricos arriba y abajo: funden la foto con
+                      el lienzo y sostienen la legibilidad de los nombres que
+                      la cruzan, dejando limpia la franja donde salimos. */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,238,0.78),rgba(247,243,238,0.12)_20%,rgba(247,243,238,0.04)_56%,rgba(247,243,238,0.2)_78%,rgba(247,243,238,0.8))]"
+                  />
+                </span>
               </motion.span>
 
-              {/* Ampersand asomado al borde del arco */}
-              <motion.span
-                initial={{ opacity: 0, scale: 0.4, rotate: -22 }}
-                animate={ready ? { opacity: 1, scale: 1, rotate: -8 } : {}}
-                transition={{ ...springSoft, delay: 1.9 }}
-                className="absolute -right-[0.55em] top-[32%] z-30 block font-serif text-[clamp(2.4rem,5vw,3.6rem)] italic leading-none text-gold"
+              {/* Ampersand a caballo sobre el marco, a media altura del arco:
+                  cae sobre el tramo recto, así el corte se lee intencionado. */}
+              <span
+                aria-hidden
+                style={{
+                  right: "calc(var(--arch-gap) * -1)",
+                  transform: "translate(50%, -50%)",
+                }}
+                className="absolute top-1/2 z-30 block"
               >
-                &
-              </motion.span>
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.4, rotate: -22 }}
+                  animate={ready ? { opacity: 1, scale: 1, rotate: -8 } : {}}
+                  transition={{ ...springSoft, delay: 1.9 }}
+                  className="block font-serif text-[clamp(2.2rem,5vw,3.4rem)] italic leading-none text-gold [text-shadow:0_0_16px_rgba(247,243,238,0.95),0_0_34px_rgba(247,243,238,0.85)]"
+                >
+                  &
+                </motion.span>
+              </span>
 
-              {/* Sello giratorio solapando la esquina del arco */}
-              <motion.span
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={ready ? { opacity: 1, scale: 1 } : {}}
-                transition={{ ...springSoft, delay: 2.15 }}
-                className="absolute -bottom-10 -left-16 z-30 hidden lg:block"
+              {/* Sello giratorio: contrapeso del ampersand al otro costado y a
+                  la misma altura, apoyado fuera del marco. En la esquina baja
+                  se montaba sobre «Julieth» en cuanto el arco se acortaba, y
+                  encima del marco su texto caía sobre la foto. */}
+              <span
+                aria-hidden
+                style={{
+                  right: "calc(100% + var(--arch-gap) + 1.15rem)",
+                  transform: "translateY(-50%)",
+                }}
+                className="absolute top-1/2 z-30 hidden lg:block"
               >
-                <RotatingBadge text={site.date.badge} />
-              </motion.span>
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={ready ? { opacity: 1, scale: 1 } : {}}
+                  transition={{ ...springSoft, delay: 2.15 }}
+                  className="block"
+                >
+                  <RotatingBadge text={site.date.badge} />
+                </motion.span>
+              </span>
             </span>
 
             <TextReveal
@@ -229,7 +291,7 @@ export function Hero() {
               delay={0.8}
               stagger={0.05}
               duration={1.1}
-              className={`${nameClass} -mt-[0.44em]`}
+              className={`${nameClass} -mt-[0.32em]`}
             />
           </span>
         </h1>
