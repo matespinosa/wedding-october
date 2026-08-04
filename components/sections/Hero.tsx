@@ -149,7 +149,13 @@ export function Hero() {
           <span aria-hidden className="h-px w-10 bg-gold/70" />
         </motion.p>
 
-        {/* Pórtico: los nombres se entrelazan con el arco fotográfico */}
+        {/* Pórtico: los nombres se entrelazan con el arco fotográfico.
+            Los márgenes negativos no son iguales a propósito: arriba hay
+            que salvar el hueco del descendente de "Mateo" y la caída del
+            semicírculo (el borde se aleja de las letras hacia los lados),
+            mientras abajo el borde es recto y "Julieth" ya sube hasta su
+            ascendente. Medidos para que ambos nombres muerdan el arco
+            unos 0,15 em de media. */}
         <h1 className="flex w-full flex-col items-center">
           <span className="sr-only">Mateo y Julieth</span>
           <span aria-hidden className="flex w-full flex-col items-center">
@@ -161,7 +167,7 @@ export function Hero() {
               delay={0.55}
               stagger={0.05}
               duration={1.1}
-              className={`${nameClass} -mb-[0.32em]`}
+              className={`${nameClass} -mb-[0.4em] md:-mb-[0.49em]`}
             />
 
             {/* Arco con la foto real */}
@@ -255,7 +261,7 @@ export function Hero() {
               delay={0.8}
               stagger={0.05}
               duration={1.1}
-              className={`${nameClass} -mt-[0.32em]`}
+              className={`${nameClass} -mt-[0.2em]`}
             />
           </span>
         </h1>
