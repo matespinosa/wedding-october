@@ -101,16 +101,24 @@ export function Gallery() {
   return (
     <section
       id="galeria"
-      className="relative overflow-hidden bg-gradient-to-b from-cream via-[#ece2d3] to-shell py-20 md:py-28"
+      className="relative overflow-hidden bg-ink py-20 text-cream md:py-28"
     >
+      {/* Misma viñeta dorada del dress code: el centro va al 32% del alto
+          para que el brillo se apague antes de tocar los bordes y no deje
+          una costura recta donde termina la onda del divisor. */}
       <div
         aria-hidden
-        className="animate-drift-slow pointer-events-none absolute -right-32 top-24 size-[34rem] rounded-full bg-gold/[0.09] blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_42%_at_50%_32%,rgba(198,169,122,0.14),transparent_65%)]"
       />
-      <FloralBranch className="pointer-events-none absolute -left-10 top-16 h-44 rotate-12 text-gold/[0.16]" />
+      <div
+        aria-hidden
+        className="animate-drift-slow pointer-events-none absolute -right-32 top-24 size-[34rem] rounded-full bg-gold/[0.07] blur-3xl"
+      />
+      <FloralBranch className="pointer-events-none absolute -left-10 top-16 h-44 rotate-12 text-gold/[0.14]" />
 
       <div className="relative mx-auto max-w-6xl px-5 md:px-8">
         <SectionHeading
+          dark
           eyebrow={site.gallery.eyebrow}
           title={site.gallery.title}
           description={site.gallery.intro}
@@ -141,14 +149,14 @@ export function Gallery() {
                   data-chapter={page.chapter.id}
                   className="flex h-full w-[min(58vw,13rem)] shrink-0 snap-center flex-col items-center justify-center text-center md:w-[min(30vw,15rem)]"
                 >
-                  <span aria-hidden className="h-10 w-px bg-gold/45" />
-                  <h3 className="mt-6 font-serif text-[1.85rem] font-light leading-[1.15] text-ink text-balance md:text-[2.2rem]">
+                  <span aria-hidden className="h-10 w-px bg-gold/55" />
+                  <h3 className="mt-6 font-serif text-[1.85rem] font-light leading-[1.15] text-cream text-balance md:text-[2.2rem]">
                     {page.chapter.label}
                   </h3>
-                  <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.26em] text-bronze text-balance">
+                  <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.26em] text-gold text-balance">
                     {page.chapter.note}
                   </p>
-                  <span aria-hidden className="mt-6 h-10 w-px bg-gold/45" />
+                  <span aria-hidden className="mt-6 h-10 w-px bg-gold/55" />
                 </div>
               );
             }
@@ -160,11 +168,11 @@ export function Gallery() {
                   data-page
                   className="flex h-full w-[min(70vw,17rem)] shrink-0 snap-center flex-col items-center justify-center text-center md:w-[min(34vw,20rem)]"
                 >
-                  <p className="font-serif text-[1.5rem] font-light italic leading-[1.35] text-ink/75 text-balance md:text-[1.85rem]">
+                  <p className="font-serif text-[1.5rem] font-light italic leading-[1.35] text-cream/75 text-balance md:text-[1.85rem]">
                     {site.gallery.quote}
                   </p>
                   <span aria-hidden className="mt-6 block h-px w-14 bg-gold/60" />
-                  <p className="mt-6 font-script text-[1.6rem] leading-none text-bronze">
+                  <p className="mt-6 font-script text-[1.6rem] leading-none text-gold">
                     M & J
                   </p>
                 </div>
@@ -178,7 +186,9 @@ export function Gallery() {
                 type="button"
                 onClick={() => setOpenAt(page.index)}
                 aria-label={`Ampliar foto: ${page.photo.caption}`}
-                className="group relative h-full shrink-0 snap-center overflow-hidden rounded-[4px] border border-white/70 bg-white/85 p-2 shadow-[0_22px_50px_-30px_rgba(27,27,27,0.6)] transition-shadow duration-700 ease-out-expo hover:shadow-[0_34px_70px_-30px_rgba(27,27,27,0.5)] md:p-2.5"
+                /* Sobre ink el paspartú blanco deslumbraba: mismo marco, en
+                   crema muy bajo, y el halo pasa a dorado al acercarse. */
+                className="group relative h-full shrink-0 snap-center overflow-hidden rounded-[4px] border border-cream/12 bg-cream/[0.05] p-2 shadow-[0_26px_60px_-32px_rgba(0,0,0,0.85)] transition-[box-shadow,border-color] duration-700 ease-out-expo hover:border-gold/35 hover:shadow-[0_34px_70px_-28px_rgba(198,169,122,0.3)] md:p-2.5"
               >
                 <span className="relative block h-full overflow-hidden rounded-[2px]">
                   <Image
@@ -208,7 +218,7 @@ export function Gallery() {
             onClick={() => step(-1)}
             disabled={atStart}
             aria-label="Fotos anteriores"
-            className="pointer-events-auto grid size-11 place-items-center rounded-full border border-ink/12 bg-cream/85 text-ink/70 shadow-[0_10px_26px_-16px_rgba(27,27,27,0.6)] backdrop-blur-sm transition-all duration-500 hover:border-gold/60 hover:text-ink disabled:pointer-events-none disabled:opacity-0"
+            className="pointer-events-auto grid size-11 place-items-center rounded-full border border-cream/15 bg-ink-2/80 text-cream/70 shadow-[0_10px_26px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm transition-all duration-500 hover:border-gold/60 hover:text-cream disabled:pointer-events-none disabled:opacity-0"
           >
             <ChevronLeft size={20} strokeWidth={1.5} />
           </button>
@@ -217,7 +227,7 @@ export function Gallery() {
             onClick={() => step(1)}
             disabled={atEnd}
             aria-label="Fotos siguientes"
-            className="pointer-events-auto grid size-11 place-items-center rounded-full border border-ink/12 bg-cream/85 text-ink/70 shadow-[0_10px_26px_-16px_rgba(27,27,27,0.6)] backdrop-blur-sm transition-all duration-500 hover:border-gold/60 hover:text-ink disabled:pointer-events-none disabled:opacity-0"
+            className="pointer-events-auto grid size-11 place-items-center rounded-full border border-cream/15 bg-ink-2/80 text-cream/70 shadow-[0_10px_26px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm transition-all duration-500 hover:border-gold/60 hover:text-cream disabled:pointer-events-none disabled:opacity-0"
           >
             <ChevronRight size={20} strokeWidth={1.5} />
           </button>
@@ -227,14 +237,14 @@ export function Gallery() {
       <div className="relative mx-auto mt-8 max-w-6xl px-5 md:px-8">
         <div
           aria-hidden
-          className="mx-auto h-px w-full max-w-[13rem] overflow-hidden bg-ink/10"
+          className="mx-auto h-px w-full max-w-[13rem] overflow-hidden bg-cream/12"
         >
           <span
-            className="block h-full w-1/3 origin-left rounded-full bg-bronze/70 transition-transform duration-200 ease-out"
+            className="block h-full w-1/3 origin-left rounded-full bg-gold/75 transition-transform duration-200 ease-out"
             style={{ transform: `translateX(${progress * 200}%)` }}
           />
         </div>
-        <p className="mt-5 text-center text-[10px] font-medium uppercase tracking-[0.26em] text-ink/40">
+        <p className="mt-5 text-center text-[10px] font-medium uppercase tracking-[0.26em] text-cream/45">
           {site.gallery.hint}
         </p>
       </div>
