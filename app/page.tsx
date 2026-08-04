@@ -16,9 +16,12 @@ export default function Home() {
       <Hero />
       <Countdown />
       <Story />
-      {/* La galería va de cream a shell, así que enlaza sola con Historia
-          y con Ceremonia: no necesita ondas de separación. */}
+      {/* La galería pasa a ink, como el dress code, así que entra y sale
+          con onda: cream (Historia en desktop, Countdown en móvil) → ink,
+          y de ink al shell de Ceremonia. */}
+      <SectionDivider bg="bg-cream" fill="fill-ink" />
       <Gallery />
+      <SectionDivider bg="bg-ink" fill="fill-shell" />
       <Venues />
       <SectionDivider bg="bg-shell" fill="fill-ink" />
       <DressCode />
