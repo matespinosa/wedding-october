@@ -435,7 +435,7 @@ export function Rsvp() {
                           setNote({ text: "", state: "" });
                         }}
                         onKeyDown={onCandidateKeyDown}
-                        aria-describedby="guest-privacy guest-lookup-note"
+                        aria-describedby="guest-lookup-note"
                         aria-invalid={lookupNote.state === "error"}
                       />
                       <button
@@ -455,18 +455,6 @@ export function Rsvp() {
                         )}
                         {lookupStatus === "checking" ? "Verificando" : "Agregar"}
                       </button>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <p
-                        id="guest-privacy"
-                        className="text-[14px] leading-relaxed text-ink/70 md:text-[15px]"
-                      >
-                        La búsqueda es privada: no mostraremos la lista de invitados.
-                      </p>
-                      <p className="text-[14px] leading-relaxed text-ink/65 md:text-[15px]">
-                        {site.rsvp.hint}
-                      </p>
                     </div>
 
                     <div
