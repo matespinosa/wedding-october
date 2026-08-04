@@ -32,8 +32,9 @@ const DUST = Array.from({ length: 14 }, () => ({
   opacity: 0.25 + rand() * 0.4,
 }));
 
-/* El arco es la pieza central: mismo radio en el clip animado y en el marco. */
-const ARCH_RADIUS = "320px 320px 22px 22px";
+/* Arco: radios en % para que WebKit no colapse el clip cuando el
+   contenedor es más estrecho que un radio en px (fallo típico en iOS). */
+const ARCH_CLIP = "inset(0 round 50% 50% 22px 22px)";
 
 const nameClass =
   "relative z-20 block font-serif text-[clamp(3.6rem,13.5vw,6.75rem)] font-light leading-[0.95] tracking-[-0.02em] text-ink";
@@ -156,21 +157,21 @@ export function Hero() {
                 className="absolute -inset-3 block rounded-b-[32px] rounded-t-full border border-gold/45 md:-inset-4"
               />
 
+              {/* Reveal con opacity/scale (no clip-path animado): Safari/iOS
+                  falla al interpolar inset(... round 320px) cuando el arco
+                  móvil es más estrecho que ese radio y la foto queda en
+                  blanco aunque el hueco del layout siga ahí. */}
               <motion.span
-                initial={{
-                  opacity: 0,
-                  clipPath: `inset(22% 13% 26% 13% round ${ARCH_RADIUS})`,
-                }}
-                animate={
-                  ready
-                    ? {
-                        opacity: 1,
-                        clipPath: `inset(0% 0% 0% 0% round ${ARCH_RADIUS})`,
-                      }
-                    : {}
-                }
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={ready ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 1.5, ease: EASE_OUT, delay: 1.05 }}
-                className="relative block aspect-[10/13] h-[clamp(320px,46vh,500px)] max-w-[86vw] overflow-hidden rounded-b-[22px] rounded-t-full"
+                style={{
+                  clipPath: ARCH_CLIP,
+                  WebkitClipPath: ARCH_CLIP,
+                  width:
+                    "min(86vw, calc(clamp(320px, 46vh, 500px) * 10 / 13))",
+                }}
+                className="relative isolate z-0 block aspect-[10/13] h-[clamp(320px,46vh,500px)] max-w-[86vw] overflow-hidden rounded-b-[22px] rounded-t-full bg-sand/40"
               >
                 {/* Foto con zoom de asentamiento (framer) + parallax GSAP interno */}
                 <motion.span
@@ -182,7 +183,7 @@ export function Hero() {
                   <span ref={photoRef} className="absolute inset-[-12%] block">
                     <Image
                       src="/images/hero.jpg"
-                      alt=""
+                      alt="Mateo y Julieth"
                       fill
                       priority
                       sizes="(max-width: 768px) 86vw, 420px"
@@ -195,7 +196,7 @@ export function Hero() {
                     y garantizan la legibilidad de los nombres que la cruzan */}
                 <span
                   aria-hidden
-                  className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,238,0.5),rgba(247,243,238,0.06)_26%,rgba(247,243,238,0.04)_62%,rgba(247,243,238,0.62))]"
+                  className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,238,0.5),rgba(247,243,238,0.06)_26%,rgba(247,243,238,0.04)_62%,rgba(247,243,238,0.62))]"
                 />
               </motion.span>
 
