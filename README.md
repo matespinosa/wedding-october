@@ -27,10 +27,10 @@ Las fotos reales viven en [`public/images/`](public/images) y se muestran en el 
 
 ## RSVP → Google Sheets
 
-El formulario usa una búsqueda privada por coincidencia exacta:
+El formulario usa una búsqueda privada por coincidencia flexible y única:
 
-- **La lista nunca llega al navegador:** el visitante escribe su nombre completo y [`app/api/rsvp/route.ts`](app/api/rsvp/route.ts) consulta Google Sheets en el servidor. La respuesta pública solo contiene si ese nombre coincide, su escritura canónica y si ya respondió.
-- **Sin desplegable ni sugerencias:** un nombre válido aparece en “Personas agregadas”. Los duplicados, nombres que no coinciden y respuestas previas se bloquean con mensajes separados.
+- **La lista nunca llega al navegador:** el visitante escribe uno o varios nombres o apellidos y [`app/api/rsvp/route.ts`](app/api/rsvp/route.ts) consulta Google Sheets en el servidor. Se ignoran tildes, mayúsculas, guiones y el orden de las palabras. La respuesta pública solo contiene si hay una coincidencia única, su escritura canónica y si ya respondió.
+- **Sin desplegable ni sugerencias:** una coincidencia única aparece en “Personas agregadas”. Si hay varias personas posibles, se pide agregar otro nombre o apellido sin revelar candidatos. Los duplicados, nombres que no coinciden y respuestas previas se bloquean con mensajes separados.
 - **Envío verificado:** el servidor valida nuevamente todas las personas antes de escribir. La hoja recibe una fila por persona y el sitio solo muestra éxito cuando Google confirma el registro.
 - **Configuración:** el endpoint actual funciona como respaldo privado del servidor. En producción se puede definir `RSVP_SCRIPT_URL` con la URL `/exec` del Apps Script.
 - **Actualizar Google Apps Script:** reemplaza el código publicado por [`google-apps-script.gs`](google-apps-script.gs), ejecuta `prepararEncabezados` una vez y crea una nueva versión de la aplicación web. La pestaña 1 guarda respuestas (`Fecha | Nombre | Teléfono | Asistencia`); la pestaña 2 contiene un nombre por fila. La nueva versión de `doGet` nunca devuelve la lista completa.

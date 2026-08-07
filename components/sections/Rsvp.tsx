@@ -32,6 +32,7 @@ type Note = { text: string; state: "" | "ok" | "error" };
 type FormErrors = { telefono?: string; asistencia?: string; menu?: string };
 type LookupResponse = {
   matched?: boolean;
+  ambiguous?: boolean;
   name?: string;
   confirmed?: boolean;
   error?: string;
@@ -184,7 +185,7 @@ function SuccessView({
 /**
  * Confirmación privada contra Google Sheets.
  * La lista completa nunca se descarga al navegador: cada persona se valida
- * por coincidencia exacta y solo entonces aparece en "Personas agregadas".
+ * con una coincidencia única y solo entonces aparece en "Personas agregadas".
  */
 export function Rsvp() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -215,16 +216,7 @@ export function Rsvp() {
     const name = candidate.replace(/\s+/g, " ").trim();
     if (!name) {
       setLookupNote({
-        text: "Escribe tu primer nombre y tu primer apellido para verificarlo.",
-        state: "error",
-      });
-      candidateRef.current?.focus();
-      return;
-    }
-
-    if (name.split(" ").length < 2) {
-      setLookupNote({
-        text: "Necesitamos tu primer nombre y tu primer apellido.",
+        text: "Escribe al menos uno de tus nombres o apellidos para verificarlo.",
         state: "error",
       });
       candidateRef.current?.focus();
@@ -252,9 +244,18 @@ export function Rsvp() {
         throw new Error(result.error || "No pudimos verificar el nombre.");
       }
 
+      if (result.ambiguous) {
+        setLookupNote({
+          text: "Encontramos más de una coincidencia. Agrega otro nombre o apellido para identificarte.",
+          state: "error",
+        });
+        candidateRef.current?.focus();
+        return;
+      }
+
       if (!result.matched) {
         setLookupNote({
-          text: "Esta persona no está dentro de la lista de invitados. Revisa que hayas escrito tu primer nombre y tu primer apellido.",
+          text: "Esta persona no está dentro de la lista de invitados. Revisa la escritura o prueba con otro nombre o apellido.",
           state: "error",
         });
         return;
@@ -511,7 +512,7 @@ export function Rsvp() {
                       htmlFor="guest-name"
                       className="block text-[14px] font-medium text-bronze"
                     >
-                      Primer nombre y primer apellido
+                      Nombre de la persona
                     </label>
 
                     <div className="flex flex-col gap-2.5 sm:flex-row">
@@ -521,7 +522,7 @@ export function Rsvp() {
                         type="text"
                         autoComplete="off"
                         spellCheck={false}
-                        placeholder="Ej. Mateo Espinosa"
+                        placeholder="Ej. Mateo Andrés Espinosa"
                         className={cn(
                           fieldClassName,
                           "min-w-0 flex-1",
@@ -534,7 +535,7 @@ export function Rsvp() {
                           setNote({ text: "", state: "" });
                         }}
                         onKeyDown={onCandidateKeyDown}
-                        aria-describedby="guest-lookup-note"
+                        aria-describedby="guest-name-help guest-lookup-note"
                         aria-invalid={lookupNote.state === "error"}
                       />
                       <button
@@ -555,6 +556,14 @@ export function Rsvp() {
                         {lookupStatus === "checking" ? "Verificando" : "Agregar"}
                       </button>
                     </div>
+
+                    <p
+                      id="guest-name-help"
+                      className="text-[14px] leading-relaxed text-ink/65 md:text-[15px]"
+                    >
+                      Puedes escribir uno o varios nombres o apellidos. Si hay
+                      más de una coincidencia, te pediremos completar otro.
+                    </p>
 
                     <div
                       id="guest-lookup-note"
