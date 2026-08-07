@@ -31,6 +31,7 @@
   --animate-float: floaty 8s ease-in-out infinite alternate;
   --animate-spin-slow: spin 30s linear infinite;
   --animate-scroll-hint: scroll-hint 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  --animate-swipe-cue: swipe-cue 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 
   @keyframes drift {
     from {
@@ -55,6 +56,17 @@
     55%,
     100% {
       transform: translateY(110%);
+    }
+  }
+  @keyframes swipe-cue {
+    0%,
+    100% {
+      transform: translateX(0);
+      opacity: 0.68;
+    }
+    45% {
+      transform: translateX(7px);
+      opacity: 1;
     }
   }
 }

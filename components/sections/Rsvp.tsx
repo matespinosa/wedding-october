@@ -505,7 +505,7 @@ export function Rsvp() {
                 >
                   <div className="space-y-4">
                     <h3 className="font-serif text-[26px] font-light leading-tight text-ink">
-                      Personas invitadas
+                      Completa tus datos
                     </h3>
 
                     <label
@@ -522,7 +522,7 @@ export function Rsvp() {
                         type="text"
                         autoComplete="off"
                         spellCheck={false}
-                        placeholder="Ej. Mateo Andrés Espinosa"
+                        placeholder="Ej. Valentina Rojas Cárdenas"
                         className={cn(
                           fieldClassName,
                           "min-w-0 flex-1",

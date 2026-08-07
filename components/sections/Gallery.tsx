@@ -53,6 +53,7 @@ export function Gallery() {
   const [progress, setProgress] = useState(0);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   /* Progreso y estado de los extremos, en rAF para no pelear con el scroll. */
   useEffect(() => {
@@ -71,6 +72,9 @@ export function Gallery() {
     };
 
     const onScroll = () => {
+      if (track.scrollLeft > 2) {
+        setHasInteracted(true);
+      }
       if (frame === 0) {
         frame = window.requestAnimationFrame(measure);
       }
@@ -134,6 +138,7 @@ export function Gallery() {
           tabIndex={0}
           role="region"
           aria-label="Álbum de fotos de Mateo y Julieth"
+          aria-describedby="gallery-swipe-hint"
           className={cn(
             "flex h-[clamp(19rem,54vh,26rem)] snap-x snap-mandatory items-stretch gap-5 overflow-x-auto overscroll-x-contain outline-none md:h-[clamp(23rem,60vh,32rem)] md:snap-proximity",
             "px-[max(1.25rem,calc((100%-72rem)/2))] scroll-p-[max(1.25rem,calc((100%-72rem)/2))]",
@@ -209,6 +214,27 @@ export function Gallery() {
               </button>
             );
           })}
+        </div>
+
+        <div
+          id="gallery-swipe-hint"
+          aria-hidden={hasInteracted || atEnd}
+          className={cn(
+            "pointer-events-none absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-cream/20 bg-ink-2/90 px-3.5 py-2 text-[10px] font-medium uppercase tracking-[0.2em] text-cream/85 transition-[opacity,transform] duration-500",
+            !hasInteracted && !atEnd
+              ? "opacity-100"
+              : "translate-y-2 opacity-0",
+          )}
+        >
+          <span>Desliza hacia la derecha</span>
+          <span className="flex items-center text-gold" aria-hidden>
+            <span className="h-px w-5 bg-gold/70" />
+            <ChevronRight
+              size={15}
+              strokeWidth={1.75}
+              className="animate-swipe-cue -ml-1"
+            />
+          </span>
         </div>
 
         {/* En móvil manda el gesto; las flechas aparecen de tablet arriba. */}
