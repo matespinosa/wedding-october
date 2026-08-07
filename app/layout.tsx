@@ -26,8 +26,7 @@ const alexBrush = Alex_Brush({
 });
 
 export const metadata: Metadata = {
-  // TODO: cambia esto por el dominio real cuando se publique.
-  metadataBase: new URL("https://mateo-julieth.vercel.app"),
+  metadataBase: new URL("https://wedding-october.vercel.app"),
   title: "Mateo & Julieth — Nuestra boda · 03.10.2026",
   description:
     "En el tiempo perfecto de Dios, nuestros caminos se unieron para siempre. Acompáñanos a celebrar nuestra boda el sábado 3 de octubre de 2026 en Bogotá.",
