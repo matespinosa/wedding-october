@@ -99,7 +99,9 @@ export function Gallery() {
     };
 
     const onScroll = () => {
-      setHasInteracted(true);
+      if (track.scrollLeft > 2) {
+        setHasInteracted(true);
+      }
       if (frame === 0) {
         frame = window.requestAnimationFrame(measure);
       }

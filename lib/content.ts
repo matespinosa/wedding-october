@@ -244,7 +244,7 @@ export const site = {
       notes: [],
       palette: [{ name: "Blanco", hex: "#FFFFFF" }],
     },
-    note: "El verde claro estará reservado para la corte y el blanco para la novia.",
+    note: "El color verde estará reservado para la corte y el color blanco estará reservado para la novia.",
   },
 
   /* Lluvia de sobres. Va como posdata de la carta, no como capítulo:

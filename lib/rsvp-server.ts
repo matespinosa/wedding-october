@@ -1,5 +1,9 @@
 import "server-only";
 
+import { findGuestNameMatch, normalizeGuestName } from "@/lib/guest-name";
+
+export { normalizeGuestName } from "@/lib/guest-name";
+
 /** Implementación del Apps Script privado (doGet nunca devuelve la lista completa). */
 const DEFAULT_SCRIPT_ENDPOINT =
   "https://script.google.com/macros/s/AKfycby00XguFKlZ5awiyhvNAQM5XJACj5JURm2l6kZ3p4c7vajVOcGCsuueG-2mTEY7mT6zyA/exec";
@@ -14,12 +18,14 @@ type LegacyGuestData = {
 
 type PrivateLookupData = {
   matched?: unknown;
+  ambiguous?: unknown;
   name?: unknown;
   confirmed?: unknown;
 };
 
 export type GuestLookup = {
   matched: boolean;
+  ambiguous: boolean;
   name?: string;
   confirmed: boolean;
 };
@@ -33,14 +39,6 @@ export type RsvpRecord = {
   asistencia: "si" | "no";
   ts: string;
 };
-
-export const normalizeGuestName = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
 
 /**
  * Consulta únicamente un nombre. También entiende temporalmente la respuesta
@@ -62,6 +60,7 @@ export async function lookupGuest(name: string): Promise<GuestLookup> {
   if (typeof data.matched === "boolean") {
     return {
       matched: data.matched,
+      ambiguous: data.ambiguous === true,
       name: data.matched && typeof data.name === "string" ? data.name : undefined,
       confirmed: data.confirmed === true,
     };
@@ -69,13 +68,17 @@ export async function lookupGuest(name: string): Promise<GuestLookup> {
 
   // Compatibilidad con el despliegue anterior mientras se publica el script nuevo.
   const names = Array.isArray(data.names) ? data.names.map(String) : [];
-  const canonicalName = names.find(
-    (guestName) => normalizeGuestName(guestName) === normalizeGuestName(name),
-  );
+  const match = findGuestNameMatch(name, names);
 
-  if (!canonicalName) {
-    return { matched: false, confirmed: false };
+  if (match.status !== "matched") {
+    return {
+      matched: false,
+      ambiguous: match.status === "ambiguous",
+      confirmed: false,
+    };
   }
+
+  const canonicalName = match.name;
 
   const confirmed = Array.isArray(data.confirmed)
     ? data.confirmed
@@ -86,7 +89,7 @@ export async function lookupGuest(name: string): Promise<GuestLookup> {
         )
     : false;
 
-  return { matched: true, name: canonicalName, confirmed };
+  return { matched: true, ambiguous: false, name: canonicalName, confirmed };
 }
 
 export async function submitRsvp(record: RsvpRecord): Promise<void> {
