@@ -109,7 +109,7 @@ export const site = {
     intro:
       "La propuesta en Nueva York y el día que nos dimos el sí ante la ley.",
     quote: "Cada paso nos trajo hasta aquí.",
-    hint: "Desliza hacia la derecha para recorrer el álbum · toca una foto para ampliarla",
+    hint: "Desliza para descubrir más fotos · toca una para ampliarla",
     /** Cada capítulo abre con su propia portadilla dentro del álbum, y
      *  los botones de arriba llevan el carrusel hasta ella. */
     chapters: [

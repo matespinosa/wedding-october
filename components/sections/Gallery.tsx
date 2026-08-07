@@ -1,8 +1,15 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { ChevronLeft, ChevronRight, MoveRight } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type WheelEvent as ReactWheelEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FloralBranch } from "@/components/ui/Florals";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Reveal } from "@/components/ui/Reveal";
@@ -46,6 +53,7 @@ function buildPages(): Page[] {
 }
 
 const PAGES = buildPages();
+const EASE_SOFT = [0.4, 0, 0.2, 1] as const;
 
 export function Gallery() {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -54,6 +62,25 @@ export function Gallery() {
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const isTrackInView = useInView(trackRef, { amount: 0.25 });
+  const prefersReducedMotion = useReducedMotion();
+  const scrollCueActive =
+    isTrackInView && !hasInteracted && !prefersReducedMotion;
+
+  const markInteracted = useCallback(() => {
+    setHasInteracted(true);
+  }, []);
+
+  const handleWheel = useCallback(
+    (event: ReactWheelEvent<HTMLDivElement>) => {
+      /* El scroll vertical sigue llevando a la persona por la página. Solo
+         una intención horizontal toma el control del carrusel. */
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        markInteracted();
+      }
+    },
+    [markInteracted],
+  );
 
   /* Progreso y estado de los extremos, en rAF para no pelear con el scroll. */
   useEffect(() => {
@@ -102,6 +129,21 @@ export function Gallery() {
     track.scrollBy({ left: amount * direction, behavior: "smooth" });
   }, []);
 
+  /* La banda solo se desplaza visualmente unos píxeles: scrollLeft no cambia.
+     Es una pista de gesto, no una reproducción automática del álbum. */
+  const pageCueAnimation = scrollCueActive
+    ? { x: [0, -12, 0] }
+    : { x: 0 };
+  const pageCueTransition = scrollCueActive
+    ? {
+        duration: 2.8,
+        ease: EASE_SOFT,
+        repeat: Number.POSITIVE_INFINITY,
+        repeatDelay: 1.8,
+        delay: 0.55,
+      }
+    : { duration: 0.35, ease: EASE_SOFT };
+
   return (
     <section
       id="galeria"
@@ -138,7 +180,11 @@ export function Gallery() {
           tabIndex={0}
           role="region"
           aria-label="Álbum de fotos de Mateo y Julieth"
-          aria-describedby="gallery-swipe-hint"
+          aria-describedby="gallery-scroll-hint"
+          onPointerDown={markInteracted}
+          onWheel={handleWheel}
+          onKeyDown={markInteracted}
+          onFocusCapture={markInteracted}
           className={cn(
             "flex h-[clamp(19rem,54vh,26rem)] snap-x snap-mandatory items-stretch gap-5 overflow-x-auto overscroll-x-contain outline-none md:h-[clamp(23rem,60vh,32rem)] md:snap-proximity",
             "px-[max(1.25rem,calc((100%-72rem)/2))] scroll-p-[max(1.25rem,calc((100%-72rem)/2))]",
@@ -148,10 +194,13 @@ export function Gallery() {
           {PAGES.map((page) => {
             if (page.kind === "chapter") {
               return (
-                <div
+                <motion.div
                   key={page.key}
                   data-page
                   data-chapter={page.chapter.id}
+                  initial={false}
+                  animate={pageCueAnimation}
+                  transition={pageCueTransition}
                   className="flex h-full w-[min(58vw,13rem)] shrink-0 snap-center flex-col items-center justify-center text-center md:w-[min(30vw,15rem)]"
                 >
                   <span aria-hidden className="h-10 w-px bg-gold/55" />
@@ -162,15 +211,18 @@ export function Gallery() {
                     {page.chapter.note}
                   </p>
                   <span aria-hidden className="mt-6 h-10 w-px bg-gold/55" />
-                </div>
+                </motion.div>
               );
             }
 
             if (page.kind === "quote") {
               return (
-                <div
+                <motion.div
                   key={page.key}
                   data-page
+                  initial={false}
+                  animate={pageCueAnimation}
+                  transition={pageCueTransition}
                   className="flex h-full w-[min(70vw,17rem)] shrink-0 snap-center flex-col items-center justify-center text-center md:w-[min(34vw,20rem)]"
                 >
                   <p className="font-serif text-[1.5rem] font-light italic leading-[1.35] text-cream/75 text-balance md:text-[1.85rem]">
@@ -180,15 +232,18 @@ export function Gallery() {
                   <p className="mt-6 font-script text-[1.6rem] leading-none text-gold">
                     M & J
                   </p>
-                </div>
+                </motion.div>
               );
             }
 
             return (
-              <button
+              <motion.button
                 key={page.key}
                 data-page
                 type="button"
+                initial={false}
+                animate={pageCueAnimation}
+                transition={pageCueTransition}
                 onClick={() => setOpenAt(page.index)}
                 aria-label={`Ampliar foto: ${page.photo.caption}`}
                 /* Sobre ink el paspartú blanco deslumbraba: mismo marco, en
@@ -211,37 +266,19 @@ export function Gallery() {
                     {page.photo.caption}
                   </span>
                 </span>
-              </button>
+              </motion.button>
             );
           })}
-        </div>
-
-        <div
-          id="gallery-swipe-hint"
-          aria-hidden={hasInteracted || atEnd}
-          className={cn(
-            "pointer-events-none absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-cream/20 bg-ink-2/90 px-3.5 py-2 text-[10px] font-medium uppercase tracking-[0.2em] text-cream/85 transition-[opacity,transform] duration-500",
-            !hasInteracted && !atEnd
-              ? "opacity-100"
-              : "translate-y-2 opacity-0",
-          )}
-        >
-          <span>Desliza hacia la derecha</span>
-          <span className="flex items-center text-gold" aria-hidden>
-            <span className="h-px w-5 bg-gold/70" />
-            <ChevronRight
-              size={15}
-              strokeWidth={1.75}
-              className="animate-swipe-cue -ml-1"
-            />
-          </span>
         </div>
 
         {/* En móvil manda el gesto; las flechas aparecen de tablet arriba. */}
         <div className="pointer-events-none absolute inset-y-0 left-0 right-0 hidden items-center justify-between px-4 md:flex">
           <button
             type="button"
-            onClick={() => step(-1)}
+            onClick={() => {
+              markInteracted();
+              step(-1);
+            }}
             disabled={atStart}
             aria-label="Fotos anteriores"
             className="pointer-events-auto grid size-11 place-items-center rounded-full border border-cream/15 bg-ink-2/80 text-cream/70 shadow-[0_10px_26px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm transition-all duration-500 hover:border-gold/60 hover:text-cream disabled:pointer-events-none disabled:opacity-0"
@@ -250,7 +287,10 @@ export function Gallery() {
           </button>
           <button
             type="button"
-            onClick={() => step(1)}
+            onClick={() => {
+              markInteracted();
+              step(1);
+            }}
             disabled={atEnd}
             aria-label="Fotos siguientes"
             className="pointer-events-auto grid size-11 place-items-center rounded-full border border-cream/15 bg-ink-2/80 text-cream/70 shadow-[0_10px_26px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm transition-all duration-500 hover:border-gold/60 hover:text-cream disabled:pointer-events-none disabled:opacity-0"
@@ -270,9 +310,34 @@ export function Gallery() {
             style={{ transform: `translateX(${progress * 200}%)` }}
           />
         </div>
-        <p className="mt-5 text-center text-[10px] font-medium uppercase tracking-[0.26em] text-cream/45">
-          {site.gallery.hint}
-        </p>
+        <div className="mt-5 flex items-center justify-center gap-2.5 text-center text-[10px] font-medium uppercase tracking-[0.26em] text-cream/45">
+          <p id="gallery-scroll-hint" className="text-balance">
+            {site.gallery.hint}
+          </p>
+          <motion.span
+            aria-hidden
+            initial={false}
+            animate={
+              scrollCueActive
+                ? { x: [0, 8, 0], opacity: [0.5, 0.95, 0.5] }
+                : { x: 0, opacity: 0.65 }
+            }
+            transition={
+              scrollCueActive
+                ? {
+                    duration: 2.8,
+                    ease: EASE_SOFT,
+                    repeat: Number.POSITIVE_INFINITY,
+                    repeatDelay: 1.8,
+                    delay: 0.55,
+                  }
+                : { duration: 0.35, ease: EASE_SOFT }
+            }
+            className="flex shrink-0 text-gold/80"
+          >
+            <MoveRight size={17} strokeWidth={1.4} />
+          </motion.span>
+        </div>
       </div>
 
       {openAt !== null && (
