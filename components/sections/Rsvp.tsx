@@ -12,12 +12,15 @@ import {
   X,
 } from "lucide-react";
 import {
+  useCallback,
+  useEffect,
   useRef,
   useState,
   type FormEvent,
   type KeyboardEvent,
   type RefObject,
 } from "react";
+import { useLenis } from "@/components/providers/LenisProvider";
 import { FloralBranch } from "@/components/ui/Florals";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionDivider } from "@/components/ui/SectionDivider";
@@ -124,12 +127,20 @@ function SuccessView({
   name,
   attendance,
   onReset,
+  onShow,
 }: {
   name: string;
   attendance: "si" | "no";
   onReset: () => void;
+  onShow: () => void;
 }) {
   const firstName = name.trim().split(" ")[0] || "invitado";
+
+  /* Se dispara al montar, es decir cuando el formulario ya terminó su salida
+     y la tarjeta tiene su altura final: solo entonces tiene sentido medirla
+     para llevar el agradecimiento a la vista. */
+  useEffect(onShow, [onShow]);
+
   return (
     <motion.div
       key="success"
@@ -205,10 +216,25 @@ export function Rsvp() {
     name: "",
     attendance: "si",
   });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { scrollTo } = useLenis();
   const candidateRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const attendanceRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLInputElement>(null);
+
+  /* Al confirmar, la tarjeta pasa de un formulario largo a un mensaje corto:
+     el navegador conserva la posición de scroll y el agradecimiento queda
+     fuera de pantalla (sobre todo en móvil). Lo centramos en el viewport. */
+  const revealCard = useCallback(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const rect = card.getBoundingClientRect();
+    const top = rect.top + window.scrollY;
+    const margin = Math.max(24, (window.innerHeight - rect.height) / 2);
+    scrollTo(Math.max(0, top - margin), { offset: 0 });
+  }, [scrollTo]);
 
   const addEntry = async () => {
     if (lookupStatus === "checking") return;
@@ -485,13 +511,17 @@ export function Rsvp() {
         </div>
 
         <Reveal delay={0.15} y={40} blur={false}>
-          <div className="relative rounded-2xl bg-shell p-5 shadow-[0_6px_8px_-6px_rgba(27,27,27,0.22)] sm:p-7 md:p-9 xl:p-10">
+          <div
+            ref={cardRef}
+            className="relative rounded-2xl bg-shell p-5 shadow-[0_6px_8px_-6px_rgba(27,27,27,0.22)] sm:p-7 md:p-9 xl:p-10"
+          >
             <AnimatePresence mode="wait">
               {status === "success" ? (
                 <SuccessView
                   name={done.name}
                   attendance={done.attendance}
                   onReset={resetForm}
+                  onShow={revealCard}
                 />
               ) : (
                 <motion.form
