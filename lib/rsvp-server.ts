@@ -32,7 +32,7 @@ export type GuestLookup = {
 
 export type RsvpRecord = {
   nombres: string[];
-  /** Paralelo a `nombres`: "carne" | "pollo", vacío si no asiste. */
+  /** Paralelo a `nombres`: "carne" | "pollo" | "vegetariano", vacío si no asiste. */
   menus: string[];
   nombre: string;
   telefono: string;

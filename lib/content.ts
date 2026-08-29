@@ -107,7 +107,7 @@ export const site = {
     eyebrow: "Galería",
     title: "Nuestros momentos",
     intro:
-      "La propuesta en Nueva York y el día que nos dimos el sí ante la ley.",
+      "La propuesta y el día que nos dimos el sí ante la ley.",
     quote: "Cada paso nos trajo hasta aquí.",
     hint: "Desliza hacia la derecha para recorrer el álbum · toca una foto para ampliarla",
     /** Cada capítulo abre con su propia portadilla dentro del álbum, y
@@ -116,7 +116,7 @@ export const site = {
       {
         id: "propuesta",
         label: "La propuesta",
-        note: "Nueva York · abril",
+        note: "Abril",
       },
       {
         id: "civil",
@@ -147,7 +147,7 @@ export const site = {
         src: galMirador,
         chapter: "propuesta",
         alt: "Mateo y Julieth de espaldas mirando los edificios de la ciudad",
-        caption: "Nueva York",
+        caption: "La ciudad",
       },
       {
         src: galEscalera,
