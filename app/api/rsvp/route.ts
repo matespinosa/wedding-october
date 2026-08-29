@@ -8,6 +8,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/** Debe coincidir con MENU_OPTIONS del formulario y con formatearMenu del Apps Script. */
+const MENU_VALUES = ["carne", "pollo", "vegetariano"];
+
 const privateError = () =>
   NextResponse.json(
     { error: "No pudimos verificar la lista en este momento." },
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
     (asistencia !== "si" && asistencia !== "no") ||
     // El menú solo se pide a quienes asisten.
     (asistencia === "si" &&
-      guests.some((guest) => guest.menu !== "carne" && guest.menu !== "pollo"))
+      guests.some((guest) => !MENU_VALUES.includes(guest.menu)))
   ) {
     return NextResponse.json(
       { error: "Completa correctamente todos los campos." },

@@ -29,7 +29,8 @@ import { RSVP_DEADLINE, site } from "@/lib/content";
 import { EASE_OUT, EASE_SOFT } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-type MenuChoice = "" | "carne" | "pollo";
+type MenuValue = "carne" | "pollo" | "vegetariano";
+type MenuChoice = "" | MenuValue;
 type Entry = { id: number; name: string; menu: MenuChoice };
 type Note = { text: string; state: "" | "ok" | "error" };
 type FormErrors = { telefono?: string; asistencia?: string; menu?: string };
@@ -54,10 +55,17 @@ const fieldClassName =
 const fieldErrorClassName =
   "border-clay/70 bg-white focus:border-clay focus:ring-clay/20";
 
-const MENU_OPTIONS = [
+const MENU_OPTIONS: {
+  value: MenuValue;
+  label: string;
+  className?: string;
+}[] = [
   { value: "carne", label: "Carne" },
   { value: "pollo", label: "Pollo" },
-] as const;
+  /* La etiqueta más larga no cabe en media columna en pantallas angostas:
+     ocupa la fila completa en vez de partirse o desbordarse. */
+  { value: "vegetariano", label: "Vegetariano", className: "col-span-2" },
+];
 
 const ATTENDANCE_OPTIONS = [
   { value: "si", label: "Sí, allí estaré" },
@@ -79,6 +87,7 @@ function ChoiceOption({
   checked,
   invalid,
   inputRef,
+  className,
   onSelect,
 }: {
   name: string;
@@ -87,10 +96,11 @@ function ChoiceOption({
   checked: boolean;
   invalid?: boolean;
   inputRef?: RefObject<HTMLInputElement | null>;
+  className?: string;
   onSelect: () => void;
 }) {
   return (
-    <label className="group cursor-pointer">
+    <label className={cn("group cursor-pointer", className)}>
       <input
         ref={inputRef}
         type="radio"
@@ -804,7 +814,8 @@ export function Rsvp() {
                                 <legend className="mb-2 text-[14px] font-medium text-bronze">
                                   {entry.name}
                                 </legend>
-                                {/* Etiquetas cortas: dos columnas incluso en móvil. */}
+                                {/* Dos columnas incluso en móvil; la opción
+                                    vegetariana se lleva la fila de abajo. */}
                                 <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                                   {MENU_OPTIONS.map((option) => (
                                     <ChoiceOption
@@ -816,6 +827,7 @@ export function Rsvp() {
                                       invalid={Boolean(
                                         formErrors.menu && !entry.menu,
                                       )}
+                                      className={option.className}
                                       inputRef={
                                         firstMissingMenuId === entry.id &&
                                         option.value === "carne"

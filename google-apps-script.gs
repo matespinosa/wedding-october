@@ -35,6 +35,7 @@ function formatearMenu(value) {
   var menu = String(value || '').trim().toLowerCase();
   if (menu === 'carne') return 'Carne';
   if (menu === 'pollo') return 'Pollo';
+  if (menu === 'vegetariano') return 'Vegetariano';
   return '';
 }
 
