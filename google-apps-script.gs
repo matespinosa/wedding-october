@@ -2,11 +2,11 @@
  * Backend privado del RSVP en Google Sheets.
  *
  * Estructura de la hoja:
- *   - Pestaña 1: respuestas (Fecha | Nombre | Teléfono | Asistencia | Menú).
- *   - Pestaña 2: lista de invitados (un nombre por fila, sin encabezado).
+ *   - Confirmacion: respuestas (Fecha | Nombre | Teléfono | Asistencia | Menú).
+ *   - Lista de invitados: un nombre por fila, sin encabezado.
  *
  * Publicación:
- *  1. En la hoja: Extensiones → Apps Script.
+ *  1. Crea un proyecto de Apps Script independiente del Wedding Tracker.
  *  2. Reemplaza el código por este archivo.
  *  3. Ejecuta `prepararEncabezados` una vez y autoriza los permisos.
  *  4. Implementar → Administrar implementaciones → Editar → Nueva versión.
@@ -18,9 +18,24 @@
  */
 
 var ENCABEZADOS = ['Fecha', 'Nombre', 'Teléfono', 'Asistencia', 'Menú'];
+var SPREADSHEET_ID = '1ieuTTS32rXfHM07_hSpEZ6xFUszWkU63avGuN_5W994';
+var HOJA_RESPUESTAS = 'Confirmacion';
+var HOJA_INVITADOS = 'Lista de invitados';
+
+function obtenerSpreadsheet() {
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
+function obtenerHoja(ss, nombre) {
+  var sheet = ss.getSheetByName(nombre);
+  if (!sheet) {
+    throw new Error('No existe la pestaña "' + nombre + '".');
+  }
+  return sheet;
+}
 
 function prepararEncabezados() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  var sheet = obtenerHoja(obtenerSpreadsheet(), HOJA_RESPUESTAS);
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(ENCABEZADOS);
     return;
@@ -77,10 +92,7 @@ function responderJson(data) {
 }
 
 function obtenerInvitados(ss) {
-  var guestSheet = ss.getSheets()[1];
-  if (!guestSheet) {
-    throw new Error('No existe la pestaña 2 con la lista de invitados.');
-  }
+  var guestSheet = obtenerHoja(ss, HOJA_INVITADOS);
 
   var seen = {};
   var guests = [];
@@ -125,7 +137,7 @@ function buscarInvitado(requestedName, guestNames) {
 }
 
 function obtenerConfirmados(ss) {
-  var respSheet = ss.getSheets()[0];
+  var respSheet = obtenerHoja(ss, HOJA_RESPUESTAS);
   var confirmed = {};
 
   if (respSheet.getLastRow() < 2) {
@@ -154,7 +166,7 @@ function doGet(e) {
       return responderJson({ matched: false, ambiguous: false, confirmed: false });
     }
 
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = obtenerSpreadsheet();
     var guestNames = obtenerInvitados(ss);
     var match = buscarInvitado(requestedName, guestNames);
 
@@ -186,7 +198,9 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  var lock = LockService.getDocumentLock();
+  // El backend vive en un proyecto independiente, por eso usa el candado del
+  // script y no un DocumentLock asociado a una hoja contenedora.
+  var lock = LockService.getScriptLock();
 
   try {
     var data = JSON.parse(e.postData.contents);
@@ -238,7 +252,7 @@ function doPost(e) {
 
     lock.waitLock(10000);
 
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = obtenerSpreadsheet();
     var guestNames = obtenerInvitados(ss);
     var confirmed = obtenerConfirmados(ss);
     var canonicalNames = [];
@@ -270,7 +284,7 @@ function doPost(e) {
       canonicalNames.push(canonicalName);
     }
 
-    var responseSheet = ss.getSheets()[0];
+    var responseSheet = obtenerHoja(ss, HOJA_RESPUESTAS);
     if (responseSheet.getLastRow() === 0) {
       responseSheet.appendRow(ENCABEZADOS);
     }

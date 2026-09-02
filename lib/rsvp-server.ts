@@ -4,12 +4,17 @@ import { findGuestNameMatch, normalizeGuestName } from "@/lib/guest-name";
 
 export { normalizeGuestName } from "@/lib/guest-name";
 
-/** Implementación del Apps Script privado (doGet nunca devuelve la lista completa). */
+/**
+ * Este endpoint debe pertenecer exclusivamente al RSVP. Wedding Tracker usa
+ * otro Apps Script y un contrato distinto; mezclarlos hace que cualquier
+ * nombre parezca inexistente.
+ */
 const DEFAULT_SCRIPT_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycby00XguFKlZ5awiyhvNAQM5XJACj5JURm2l6kZ3p4c7vajVOcGCsuueG-2mTEY7mT6zyA/exec";
+  "https://script.google.com/macros/s/AKfycbykbzc9cKPlhlwU37aJf-tMfcWwR2mkWUblVgdKNkNSQaBuGtztX_NGLGX2zSBza-Oq/exec";
 
-const scriptEndpoint =
-  process.env.RSVP_SCRIPT_URL?.trim() || DEFAULT_SCRIPT_ENDPOINT;
+const getScriptEndpoint = () => {
+  return process.env.RSVP_SCRIPT_URL?.trim() || DEFAULT_SCRIPT_ENDPOINT;
+};
 
 type LegacyGuestData = {
   names?: unknown;
@@ -46,7 +51,7 @@ export type RsvpRecord = {
  * nunca la envía al navegador.
  */
 export async function lookupGuest(name: string): Promise<GuestLookup> {
-  const url = new URL(scriptEndpoint);
+  const url = new URL(getScriptEndpoint());
   url.searchParams.set("name", name);
 
   const response = await fetch(url, { cache: "no-store" });
@@ -67,7 +72,13 @@ export async function lookupGuest(name: string): Promise<GuestLookup> {
   }
 
   // Compatibilidad con el despliegue anterior mientras se publica el script nuevo.
-  const names = Array.isArray(data.names) ? data.names.map(String) : [];
+  // Si no existe ninguno de los dos contratos, el endpoint es incorrecto o
+  // está desactualizado: debe fallar como indisponible, no como "no encontrado".
+  if (!Array.isArray(data.names)) {
+    throw new Error("El endpoint configurado no corresponde al RSVP");
+  }
+
+  const names = data.names.map(String);
   const match = findGuestNameMatch(name, names);
 
   if (match.status !== "matched") {
@@ -93,7 +104,7 @@ export async function lookupGuest(name: string): Promise<GuestLookup> {
 }
 
 export async function submitRsvp(record: RsvpRecord): Promise<void> {
-  const response = await fetch(scriptEndpoint, {
+  const response = await fetch(getScriptEndpoint(), {
     method: "POST",
     cache: "no-store",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
